@@ -5,7 +5,7 @@ export default function Home() {
   const topRegions = getTopRegions(5);
 
   return (
-    <>
+    <div className="home">
       <section className="hero">
         <div className="hero-card">
           <span className="pill">Local MVP</span>
@@ -62,6 +62,6 @@ export default function Home() {
           </div>
         )}
       </section>
-    </>
+    </div>
   );
 }

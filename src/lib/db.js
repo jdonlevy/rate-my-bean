@@ -24,6 +24,7 @@ db.exec(`
     roast_level TEXT,
     price_usd REAL,
     flavor_notes TEXT,
+    created_by TEXT,
     created_at TEXT NOT NULL DEFAULT (datetime('now'))
   );
 
@@ -33,6 +34,7 @@ db.exec(`
     score INTEGER NOT NULL,
     notes TEXT,
     price_paid REAL,
+    created_by TEXT,
     created_at TEXT NOT NULL DEFAULT (datetime('now')),
     FOREIGN KEY (bean_id) REFERENCES beans (id) ON DELETE CASCADE
   );
@@ -40,6 +42,16 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_ratings_bean_id ON ratings (bean_id);
   CREATE INDEX IF NOT EXISTS idx_beans_origin ON beans (origin_country, origin_region);
 `);
+
+const beanColumns = db.prepare("PRAGMA table_info(beans)").all();
+if (!beanColumns.some((col) => col.name === "created_by")) {
+  db.exec("ALTER TABLE beans ADD COLUMN created_by TEXT");
+}
+
+const ratingColumns = db.prepare("PRAGMA table_info(ratings)").all();
+if (!ratingColumns.some((col) => col.name === "created_by")) {
+  db.exec("ALTER TABLE ratings ADD COLUMN created_by TEXT");
+}
 
 export function createBean(data) {
   const stmt = db.prepare(`
@@ -52,8 +64,9 @@ export function createBean(data) {
       process,
       roast_level,
       price_usd,
-      flavor_notes
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      flavor_notes,
+      created_by
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `);
 
   const info = stmt.run(
@@ -65,7 +78,8 @@ export function createBean(data) {
     data.process || null,
     data.roastLevel || null,
     data.priceUsd ?? null,
-    data.flavorNotes || null
+    data.flavorNotes || null,
+    data.createdBy || null
   );
 
   return info.lastInsertRowid;
@@ -73,15 +87,16 @@ export function createBean(data) {
 
 export function addRating(beanId, data) {
   const stmt = db.prepare(`
-    INSERT INTO ratings (bean_id, score, notes, price_paid)
-    VALUES (?, ?, ?, ?)
+    INSERT INTO ratings (bean_id, score, notes, price_paid, created_by)
+    VALUES (?, ?, ?, ?, ?)
   `);
 
   const info = stmt.run(
     beanId,
     data.score,
     data.notes || null,
-    data.pricePaid ?? null
+    data.pricePaid ?? null,
+    data.createdBy || null
   );
 
   return info.lastInsertRowid;

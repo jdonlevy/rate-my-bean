@@ -1,4 +1,5 @@
 import { Geist, Geist_Mono } from "next/font/google";
+import { auth } from "@/auth";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -16,7 +17,9 @@ export const metadata = {
   description: "Rate coffee beans and discover top regions.",
 };
 
-export default function RootLayout({ children }) {
+export default async function RootLayout({ children }) {
+  const session = await auth();
+
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
@@ -33,6 +36,16 @@ export default function RootLayout({ children }) {
               <a href="/">All Beans</a>
               <a href="/beans/new">Add Bean</a>
             </nav>
+            <div className="auth-actions">
+              {session?.user ? (
+                <>
+                  <span className="muted">{session.user.email}</span>
+                  <a href="/api/auth/signout">Sign out</a>
+                </>
+              ) : (
+                <a href="/api/auth/signin">Sign in</a>
+              )}
+            </div>
           </div>
         </header>
         <main className="container page-shell">{children}</main>
