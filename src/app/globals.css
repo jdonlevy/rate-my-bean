@@ -1,13 +1,13 @@
 :root {
-  --bg: #f6efe7;
-  --bg-2: #f0e2d5;
-  --ink: #1d1511;
-  --muted: #6c5a4f;
-  --card: #fffaf5;
-  --accent: #ba5c2a;
-  --accent-2: #2f1c12;
-  --ring: rgba(186, 92, 42, 0.2);
-  --shadow: 0 20px 60px rgba(29, 21, 17, 0.12);
+  --bg: #e6f2e6;
+  --bg-2: #cfe6cf;
+  --ink: #0f2416;
+  --muted: #3c6b4d;
+  --card: #f7fff7;
+  --accent: #2f7d4a;
+  --accent-2: #0f3a22;
+  --ring: rgba(47, 125, 74, 0.22);
+  --shadow: 0 20px 60px rgba(15, 36, 22, 0.12);
 }
 
 * {
@@ -123,6 +123,12 @@ a {
   display: flex;
   flex-direction: column;
   gap: 28px;
+}
+
+.site-footer {
+  border-top: 1px solid rgba(15, 36, 22, 0.12);
+  padding: 18px 0 28px;
+  font-size: 13px;
 }
 
 .home {
