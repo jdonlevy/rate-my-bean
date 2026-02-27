@@ -1,9 +1,12 @@
+import { auth } from "@/auth";
 import { getBeanById, getRatingsForBean } from "@/lib/db";
 import RatingForm from "./RatingForm";
 
-export default function BeanDetailPage({ params }) {
-  const id = Number(params.id);
+export default async function BeanDetailPage({ params }) {
+  const { id: rawId } = await params;
+  const id = Number(rawId);
   const bean = Number.isInteger(id) ? getBeanById(id) : null;
+  const session = await auth();
 
   if (!bean) {
     return (
@@ -57,7 +60,7 @@ export default function BeanDetailPage({ params }) {
 
       <div className="hero-card">
         <h2>Add a rating</h2>
-        <RatingForm beanId={id} />
+        <RatingForm beanId={id} canRate={Boolean(session?.user)} />
         <div className="card">
           <h3>Recent ratings</h3>
           {ratings.length === 0 ? (

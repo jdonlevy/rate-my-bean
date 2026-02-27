@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200">
+  <defs>
+    <pattern id="beans" width="200" height="200" patternUnits="userSpaceOnUse">
+      <rect width="200" height="200" fill="#f7ecdf"/>
+      <g fill="#b86a3a" stroke="#6b3a1f" stroke-width="2" opacity="0.45">
+        <ellipse cx="40" cy="40" rx="16" ry="24" transform="rotate(-20 40 40)"/>
+        <path d="M40 18c6 10 6 34 0 44" fill="none" stroke="#7a3f1f" stroke-width="2"/>
+        <ellipse cx="150" cy="50" rx="18" ry="26" transform="rotate(18 150 50)"/>
+        <path d="M150 24c6 12 6 38 0 52" fill="none" stroke="#7a3f1f" stroke-width="2"/>
+        <ellipse cx="90" cy="130" rx="20" ry="30" transform="rotate(-12 90 130)"/>
+        <path d="M90 100c6 12 6 40 0 60" fill="none" stroke="#7a3f1f" stroke-width="2"/>
+        <ellipse cx="170" cy="150" rx="16" ry="24" transform="rotate(28 170 150)"/>
+        <path d="M170 126c6 10 6 34 0 44" fill="none" stroke="#7a3f1f" stroke-width="2"/>
+        <ellipse cx="30" cy="150" rx="14" ry="22" transform="rotate(12 30 150)"/>
+        <path d="M30 128c5 9 5 30 0 40" fill="none" stroke="#7a3f1f" stroke-width="2"/>
+      </g>
+      <g fill="#8c3e1d" opacity="0.35">
+        <circle cx="120" cy="95" r="4"/>
+        <circle cx="60" cy="100" r="3"/>
+        <circle cx="150" cy="120" r="3"/>
+        <circle cx="110" cy="30" r="2.5"/>
+      </g>
+    </pattern>
+  </defs>
+  <rect width="200" height="200" fill="url(#beans)"/>
+</svg>

@@ -1,3 +1,4 @@
+import { auth } from "@/auth";
 import { createBean, getBeans } from "@/lib/db";
 
 export async function GET() {
@@ -6,6 +7,14 @@ export async function GET() {
 }
 
 export async function POST(request) {
+  const session = await auth();
+  if (!session?.user?.email) {
+    return Response.json(
+      { error: "Sign in required to add a bean." },
+      { status: 401 }
+    );
+  }
+
   const body = await request.json();
 
   if (!body?.name || !body?.originCountry) {
@@ -25,6 +34,7 @@ export async function POST(request) {
     roastLevel: body.roastLevel?.trim() || "",
     priceUsd: body.priceUsd === "" ? null : Number(body.priceUsd),
     flavorNotes: body.flavorNotes?.trim() || "",
+    createdBy: session.user.email,
   });
 
   return Response.json({ id });
