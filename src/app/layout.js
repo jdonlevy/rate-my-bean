@@ -49,6 +49,11 @@ export default async function RootLayout({ children }) {
           </div>
         </header>
         <main className="container page-shell">{children}</main>
+        <footer className="site-footer">
+          <div className="container">
+            <p className="muted">Property of dongdog</p>
+          </div>
+        </footer>
       </body>
     </html>
   );
