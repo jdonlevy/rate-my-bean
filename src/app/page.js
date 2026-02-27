@@ -1,66 +1,67 @@
-import Image from "next/image";
-import styles from "./page.module.css";
+import { getBeans, getTopRegions } from "@/lib/db";
 
 export default function Home() {
+  const beans = getBeans();
+  const topRegions = getTopRegions(5);
+
   return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className={styles.intro}>
-          <h1>To get started, edit the page.js file.</h1>
+    <>
+      <section className="hero">
+        <div className="hero-card">
+          <span className="pill">Local MVP</span>
+          <h1>Rate coffee beans like a pro.</h1>
           <p>
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Learning
-            </a>{" "}
-            center.
+            Track beans, blends, origins, and flavor notes. Compare ratings and
+            see which regions deliver the best value.
           </p>
         </div>
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className={styles.secondary}
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+        <div className="hero-card">
+          <h2>Top Regions</h2>
+          {topRegions.length === 0 ? (
+            <p className="muted">No ratings yet. Add a bean and a rating.</p>
+          ) : (
+            <div className="grid">
+              {topRegions.map((region) => (
+                <div className="card" key={`${region.origin_country}-${region.origin_region}`}>
+                  <h3>
+                    {region.origin_country}
+                    {region.origin_region ? ` · ${region.origin_region}` : ""}
+                  </h3>
+                  <p className="rating">{Number(region.avg_score).toFixed(1)}★</p>
+                  <p className="muted">{region.rating_count} ratings</p>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
-      </main>
-    </div>
+      </section>
+
+      <section>
+        <h2>All Beans</h2>
+        {beans.length === 0 ? (
+          <p className="muted">No beans yet. Add your first one.</p>
+        ) : (
+          <div className="grid">
+            {beans.map((bean) => (
+              <a className="card" href={`/beans/${bean.id}`} key={bean.id}>
+                <div>
+                  <h3>{bean.name}</h3>
+                  <p className="muted">
+                    {bean.origin_country}
+                    {bean.origin_region ? ` · ${bean.origin_region}` : ""}
+                  </p>
+                </div>
+                <div>
+                  <p className="rating">
+                    {bean.avg_score ? Number(bean.avg_score).toFixed(1) : "—"}★
+                  </p>
+                  <p className="muted">{bean.rating_count} ratings</p>
+                </div>
+              </a>
+            ))}
+          </div>
+        )}
+      </section>
+    </>
   );
 }
