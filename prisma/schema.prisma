@@ -1,0 +1,37 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Bean {
+  id            Int       @id @default(autoincrement())
+  name          String
+  roaster       String?
+  originCountry String
+  originRegion  String?
+  blend         Boolean   @default(false)
+  process       String?
+  roastLevel    String?
+  priceUsd      Float?
+  flavorNotes   String?
+  createdAt     DateTime  @default(now())
+  ratings       Rating[]
+}
+
+model Rating {
+  id        Int      @id @default(autoincrement())
+  beanId    Int
+  score     Int
+  notes     String?
+  pricePaid Float?
+  createdAt DateTime @default(now())
+  bean      Bean     @relation(fields: [beanId], references: [id], onDelete: Cascade)
+}
