@@ -10,6 +10,10 @@ function isProtectedPath(pathname) {
 }
 
 export function proxy(request) {
+  if (process.env.VERCEL_ENV === "preview") {
+    return NextResponse.next();
+  }
+
   const { pathname } = request.nextUrl;
   if (pathname.startsWith("/access")) return NextResponse.next();
   if (pathname.startsWith("/api/access")) return NextResponse.next();
