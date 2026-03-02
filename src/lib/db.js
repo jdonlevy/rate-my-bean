@@ -189,7 +189,7 @@ const initPromise = (async () => {
   );
   if (!regionCount.rows[0]?.count) {
     const batch = regionSeed.map(([country, region]) => ({
-      sql: "INSERT INTO country_regions (country, region, count) VALUES (?, ?, 0)",
+      sql: "INSERT OR IGNORE INTO country_regions (country, region, count) VALUES (?, ?, 0)",
       args: [country, region],
     }));
     await db.batch(batch);
