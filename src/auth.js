@@ -5,6 +5,7 @@ import { upsertUser } from "@/lib/db";
 export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: [Google],
   session: { strategy: "jwt" },
+  trustHost: true,
   callbacks: {
     async jwt({ token, user }) {
       if (user?.id) {
