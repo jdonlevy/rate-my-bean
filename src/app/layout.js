@@ -34,6 +34,7 @@ export default async function RootLayout({ children }) {
             </div>
             <nav className="nav-links">
               <a href="/">All Blends</a>
+              <a href="/regions">Regions</a>
               <a href="/beans/new">Add Blend</a>
             </nav>
             <div className="auth-actions">
