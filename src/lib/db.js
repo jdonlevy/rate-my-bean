@@ -509,3 +509,23 @@ export async function findDuplicateBean(data) {
   });
   return result.rows[0] || null;
 }
+
+export async function getTables() {
+  await ensureInit();
+  const result = await db.execute({
+    sql: "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name;",
+  });
+  return result.rows.map((row) => row.name);
+}
+
+export async function getTableRows(table, limit = 50) {
+  await ensureInit();
+  const allowed = await getTables();
+  if (!allowed.includes(table)) return { columns: [], rows: [] };
+  const result = await db.execute({
+    sql: `SELECT * FROM ${table} LIMIT ?`,
+    args: [limit],
+  });
+  const columns = result.columns || [];
+  return { columns, rows: result.rows };
+}
