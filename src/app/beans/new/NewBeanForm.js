@@ -654,6 +654,7 @@ export default function NewBeanForm({ suggestions }) {
           name="bagImage"
           type="file"
           accept="image/jpeg,image/png,image/heic,image/heif"
+          capture="environment"
         />
       </div>
 
@@ -664,6 +665,7 @@ export default function NewBeanForm({ suggestions }) {
           name="coffeeImage"
           type="file"
           accept="image/jpeg,image/png,image/heic,image/heif"
+          capture="environment"
         />
       </div>
 

@@ -107,6 +107,7 @@ export default function RatingForm({ beanId, canRate }) {
           name="bagImage"
           type="file"
           accept="image/jpeg,image/png,image/heic,image/heif"
+          capture="environment"
         />
       </div>
 
@@ -117,6 +118,7 @@ export default function RatingForm({ beanId, canRate }) {
           name="coffeeImage"
           type="file"
           accept="image/jpeg,image/png,image/heic,image/heif"
+          capture="environment"
         />
       </div>
 
