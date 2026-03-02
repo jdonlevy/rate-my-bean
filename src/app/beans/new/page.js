@@ -4,20 +4,21 @@ import NewBeanForm from "./NewBeanForm";
 
 export default async function NewBeanPage() {
   const session = await auth();
-  const suggestions = getBeanFieldSuggestions();
+  const suggestions = await getBeanFieldSuggestions();
+  const isPreview = process.env.VERCEL_ENV === "preview";
 
   return (
     <section className="hero-card">
-      <h1>Add a Bean</h1>
+      <h1>Add a Blend</h1>
       <p className="muted">
         Start with the essentials. You can add more details later.
       </p>
 
-      {session?.user ? (
+      {session?.user || isPreview ? (
         <NewBeanForm suggestions={suggestions} />
       ) : (
         <div className="card">
-          <p className="muted">Sign in to add a bean.</p>
+          <p className="muted">Sign in to add a blend.</p>
           <a className="button" href="/api/auth/signin">
             Sign in
           </a>

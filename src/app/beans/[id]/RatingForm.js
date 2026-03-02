@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-export default function RatingForm({ beanId, canRate }) {
+export default function RatingForm({ beanId, canRate, authDisabled = false }) {
   const [form, setForm] = useState({
     score: "5",
     notes: "",
@@ -22,10 +22,18 @@ export default function RatingForm({ beanId, canRate }) {
     setSaving(true);
 
     try {
+      const formData = new FormData();
+      formData.append("score", form.score);
+      formData.append("notes", form.notes);
+      formData.append("pricePaid", form.pricePaid);
+      const bagImage = event.currentTarget.bagImage.files?.[0];
+      const coffeeImage = event.currentTarget.coffeeImage.files?.[0];
+      if (bagImage) formData.append("bagImage", bagImage);
+      if (coffeeImage) formData.append("coffeeImage", coffeeImage);
+
       const res = await fetch(`/api/beans/${beanId}/ratings`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: formData,
       });
 
       if (!res.ok) {
@@ -46,9 +54,13 @@ export default function RatingForm({ beanId, canRate }) {
     return (
       <div className="card">
         <p className="muted">Sign in to add a rating.</p>
-        <a className="button" href="/api/auth/signin">
-          Sign in
-        </a>
+        {authDisabled ? (
+          <p className="muted">Login is disabled in preview.</p>
+        ) : (
+          <a className="button" href="/api/auth/signin">
+            Sign in
+          </a>
+        )}
       </div>
     );
   }
@@ -67,7 +79,7 @@ export default function RatingForm({ beanId, canRate }) {
       </div>
 
       <div className="form-row">
-        <label htmlFor="pricePaid">Price paid (USD)</label>
+        <label htmlFor="pricePaid">Price paid (GBP)</label>
         <input
           id="pricePaid"
           name="pricePaid"
@@ -89,6 +101,28 @@ export default function RatingForm({ beanId, canRate }) {
           value={form.notes}
           onChange={updateField}
           required
+        />
+      </div>
+
+      <div className="form-row">
+        <label htmlFor="bagImage">Bag photo (optional)</label>
+        <input
+          id="bagImage"
+          name="bagImage"
+          type="file"
+          accept="image/jpeg,image/png,image/heic,image/heif"
+          capture="environment"
+        />
+      </div>
+
+      <div className="form-row">
+        <label htmlFor="coffeeImage">Brew photo (optional)</label>
+        <input
+          id="coffeeImage"
+          name="coffeeImage"
+          type="file"
+          accept="image/jpeg,image/png,image/heic,image/heif"
+          capture="environment"
         />
       </div>
 

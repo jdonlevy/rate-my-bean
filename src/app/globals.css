@@ -296,6 +296,102 @@ a {
   color: var(--muted);
 }
 
+.mini-map {
+  margin-top: 18px;
+}
+
+.region-map {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 24px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.65);
+  box-shadow: 0 18px 50px rgba(9, 28, 18, 0.12);
+}
+
+.region-map.mini {
+  aspect-ratio: 3 / 2;
+  border-radius: 18px;
+}
+
+.region-map-surface {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(140deg, rgba(255, 255, 255, 0.65), rgba(255, 255, 255, 0.15)),
+    url("/world-map.svg");
+  background-size: cover;
+  background-position: center;
+}
+
+.region-pin {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  background: var(--accent);
+  box-shadow: 0 0 0 6px rgba(21, 107, 59, 0.18);
+  transform: translate(-50%, -50%);
+}
+
+.region-map.mini .region-pin {
+  width: 10px;
+  height: 10px;
+  box-shadow: 0 0 0 4px rgba(21, 107, 59, 0.18);
+}
+.db-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.db-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.db-tab {
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.7);
+  font-size: 13px;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.db-tab.active {
+  background: rgba(21, 107, 59, 0.15);
+  color: var(--accent-2);
+}
+
+.db-table-wrap {
+  overflow-x: auto;
+  border-radius: 16px;
+  box-shadow: 0 18px 50px rgba(9, 28, 18, 0.12);
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.db-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.db-table th,
+.db-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  text-align: left;
+  white-space: nowrap;
+}
+
+.db-table th {
+  background: rgba(21, 107, 59, 0.08);
+  font-weight: 600;
+}
 .combo {
   position: relative;
 }
@@ -363,6 +459,15 @@ a {
 
 .button:hover {
   transform: translateY(-1px);
+}
+
+.button.disabled,
+.button[aria-disabled="true"] {
+  cursor: not-allowed;
+  background: rgba(31, 111, 67, 0.28);
+  color: rgba(255, 255, 255, 0.7);
+  box-shadow: none;
+  transform: none;
 }
 
 .link {

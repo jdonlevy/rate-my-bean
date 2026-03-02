@@ -7,14 +7,16 @@ import path from "path";
 import os from "os";
 
 export async function GET() {
-  const beans = getBeans();
-  const suggestions = getBeanFieldSuggestions();
+  const beans = await getBeans();
+  const suggestions = await getBeanFieldSuggestions();
   return Response.json({ beans, suggestions });
 }
 
 export async function POST(request) {
   const session = await auth();
-  if (!session?.user?.email) {
+  const isPreview = process.env.VERCEL_ENV === "preview";
+  const userEmail = session?.user?.email || (isPreview ? "preview@local" : null);
+  if (!userEmail) {
     return Response.json(
       { error: "Sign in required to add a bean." },
       { status: 401 }
@@ -25,10 +27,11 @@ export async function POST(request) {
   const name = body.get("name");
   const originCountry = body.get("originCountry");
   const roaster = body.get("roaster");
+  const reviewerName = body.get("reviewerName");
   const roasterUrlInput = body.get("roasterUrl");
   const originRegion = body.get("originRegion");
   const blend = body.get("blend");
-  const process = body.get("process");
+  const processMethod = body.get("process");
   const roastLevel = body.get("roastLevel");
   const priceUsd = body.get("priceUsd");
   const flavorNotes = body.get("flavorNotes");
@@ -45,7 +48,7 @@ export async function POST(request) {
     );
   }
 
-  const duplicate = findDuplicateBean({
+  const duplicate = await findDuplicateBean({
     name: name.toString(),
     roaster: roaster?.toString() || "",
     originCountry: originCountry.toString(),
@@ -165,18 +168,19 @@ export async function POST(request) {
     return Response.json({ error: "rating price is required" }, { status: 400 });
   }
 
-  const id = createBean({
+  const id = await createBean({
     name: name.trim(),
+    reviewerName: reviewerName?.toString().trim() || "",
     roaster: roaster?.toString().trim() || "",
     roasterUrl,
     originCountry: originCountry.toString().trim(),
     originRegion: originRegion?.toString().trim() || "",
     blend: String(blend) === "true",
-    process: process?.toString().trim() || "",
+    process: processMethod?.toString().trim() || "",
     roastLevel: roastLevel?.toString().trim() || "",
     priceUsd: priceUsd === "" || priceUsd == null ? null : Number(priceUsd),
     flavorNotes: flavorNotes?.toString().trim() || "",
-    createdBy: session.user.email,
+    createdBy: userEmail,
     bagImage: bagImageData.buffer,
     bagImageType: bagImageData.type,
     coffeeImage: coffeeImageData.buffer,
@@ -184,11 +188,11 @@ export async function POST(request) {
   });
 
   if (scoreValue != null) {
-    addRating(id, {
+    await addRating(id, {
       score: scoreValue,
       notes: notesValue,
       pricePaid: pricePaidValue,
-      createdBy: session.user.email,
+      createdBy: userEmail,
     });
   }
 

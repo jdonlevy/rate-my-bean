@@ -5,14 +5,13 @@ import { useRouter } from "next/navigation";
 
 const initialState = {
   name: "",
+  reviewerName: "",
   roaster: "",
   originCountry: "",
   originRegion: "",
   blend: false,
   process: "",
   roastLevel: "",
-  priceUsd: "",
-  flavorNotes: "",
   roasterUrl: "",
   ratingScore: "",
   ratingNotes: "",
@@ -447,6 +446,17 @@ export default function NewBeanForm({ suggestions }) {
         </p>
       ) : null}
 
+      <div className="form-row">
+        <label htmlFor="reviewerName">Reviewer name</label>
+        <input
+          id="reviewerName"
+          name="reviewerName"
+          value={form.reviewerName}
+          onChange={updateField}
+          placeholder="Your name"
+        />
+      </div>
+
       <SearchSelect
         id="originRegion"
         name="originRegion"
@@ -493,12 +503,12 @@ export default function NewBeanForm({ suggestions }) {
       <SearchSelect
         id="name"
         name="name"
-        label="Bean name *"
+        label="Blend name *"
         value={form.name}
         onChange={updateField}
         options={suggestions?.names || []}
         required
-        placeholder="Start typing a name"
+        placeholder="Start typing a blend name"
       />
       {fuzzyMatches.nameMatch ? (
         <p className="hint">
@@ -515,6 +525,12 @@ export default function NewBeanForm({ suggestions }) {
               {fuzzyMatches.comboMatch.origin_region
                 ? ` · ${fuzzyMatches.comboMatch.origin_region}`
                 : ""}
+            </p>
+            <a className="link" href={`/beans/${fuzzyMatches.comboMatch.id}`}>
+              View bean and add your rating →
+            </a>
+            <p className="muted">
+              You can add your own rating with bag and brew photos.
             </p>
           </div>
         ) : null}
@@ -583,30 +599,6 @@ export default function NewBeanForm({ suggestions }) {
         </select>
       </div>
 
-      <div className="form-row">
-        <label htmlFor="priceUsd">Price (GBP)</label>
-        <input
-          id="priceUsd"
-          name="priceUsd"
-          value={form.priceUsd}
-          onChange={updateField}
-          type="number"
-          step="0.01"
-          min="0"
-        />
-      </div>
-
-      <div className="form-row">
-        <label htmlFor="flavorNotes">Flavor notes</label>
-        <textarea
-          id="flavorNotes"
-          name="flavorNotes"
-          value={form.flavorNotes}
-          onChange={updateField}
-          rows={4}
-        />
-      </div>
-
       <div className="card">
         <h3>Add an initial rating (optional)</h3>
         <div className="form">
@@ -628,7 +620,7 @@ export default function NewBeanForm({ suggestions }) {
           </div>
 
           <div className="form-row">
-            <label htmlFor="ratingPricePaid">Price paid (USD)</label>
+            <label htmlFor="ratingPricePaid">Price paid (GBP)</label>
             <input
               id="ratingPricePaid"
               name="ratingPricePaid"
@@ -662,6 +654,7 @@ export default function NewBeanForm({ suggestions }) {
           name="bagImage"
           type="file"
           accept="image/jpeg,image/png,image/heic,image/heif"
+          capture="environment"
         />
       </div>
 
@@ -672,6 +665,7 @@ export default function NewBeanForm({ suggestions }) {
           name="coffeeImage"
           type="file"
           accept="image/jpeg,image/png,image/heic,image/heif"
+          capture="environment"
         />
       </div>
 
