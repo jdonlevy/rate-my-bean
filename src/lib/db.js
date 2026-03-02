@@ -406,21 +406,32 @@ export async function getTopRegions(limit = 5) {
 
 export async function upsertUser(data) {
   await ensureInit();
+  const email = data.email || null;
+  if (!email) return;
+
+  const existing = await db.execute({
+    sql: "SELECT id FROM users WHERE email = ? LIMIT 1",
+    args: [email],
+  });
+
+  if (existing.rows.length > 0) {
+    await db.execute({
+      sql: `
+        UPDATE users
+        SET name = ?, image = ?
+        WHERE email = ?
+      `,
+      args: [data.name || null, data.image || null, email],
+    });
+    return;
+  }
+
   await db.execute({
     sql: `
       INSERT INTO users (id, email, name, image)
       VALUES (?, ?, ?, ?)
-      ON CONFLICT(id) DO UPDATE SET
-        email = excluded.email,
-        name = excluded.name,
-        image = excluded.image
     `,
-    args: [
-      data.id,
-      data.email || null,
-      data.name || null,
-      data.image || null,
-    ],
+    args: [data.id, email, data.name || null, data.image || null],
   });
 }
 
