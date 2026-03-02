@@ -58,7 +58,7 @@ export default async function Home() {
       <div className="section-divider" role="presentation" />
 
       <section>
-        <h2>All Beans</h2>
+        <h2>All Blends</h2>
         {beans.length === 0 ? (
           <p className="muted">No beans yet. Add your first one.</p>
         ) : (
@@ -67,6 +67,9 @@ export default async function Home() {
               <a className="card" href={`/beans/${bean.id}`} key={bean.id}>
                 <div>
                   <h3>{bean.name}</h3>
+                  {bean.reviewer_name ? (
+                    <p className="muted">Reviewed by {bean.reviewer_name}</p>
+                  ) : null}
                   <p className="muted">
                     {bean.origin_country}
                     {bean.origin_region ? ` · ${bean.origin_region}` : ""}

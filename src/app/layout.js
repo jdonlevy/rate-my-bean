@@ -33,8 +33,8 @@ export default async function RootLayout({ children }) {
               </div>
             </div>
             <nav className="nav-links">
-              <a href="/">All Beans</a>
-              <a href="/beans/new">Add Bean</a>
+              <a href="/">All Blends</a>
+              <a href="/beans/new">Add Blend</a>
             </nav>
             <div className="auth-actions">
               {session?.user ? (

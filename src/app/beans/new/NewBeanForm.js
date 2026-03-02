@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 
 const initialState = {
   name: "",
+  reviewerName: "",
   roaster: "",
   originCountry: "",
   originRegion: "",
@@ -445,6 +446,17 @@ export default function NewBeanForm({ suggestions }) {
         </p>
       ) : null}
 
+      <div className="form-row">
+        <label htmlFor="reviewerName">Reviewer name</label>
+        <input
+          id="reviewerName"
+          name="reviewerName"
+          value={form.reviewerName}
+          onChange={updateField}
+          placeholder="Your name"
+        />
+      </div>
+
       <SearchSelect
         id="originRegion"
         name="originRegion"
@@ -491,12 +503,12 @@ export default function NewBeanForm({ suggestions }) {
       <SearchSelect
         id="name"
         name="name"
-        label="Bean name *"
+        label="Blend name *"
         value={form.name}
         onChange={updateField}
         options={suggestions?.names || []}
         required
-        placeholder="Start typing a name"
+        placeholder="Start typing a blend name"
       />
       {fuzzyMatches.nameMatch ? (
         <p className="hint">
@@ -608,7 +620,7 @@ export default function NewBeanForm({ suggestions }) {
           </div>
 
           <div className="form-row">
-            <label htmlFor="ratingPricePaid">Price paid (USD)</label>
+            <label htmlFor="ratingPricePaid">Price paid (GBP)</label>
             <input
               id="ratingPricePaid"
               name="ratingPricePaid"

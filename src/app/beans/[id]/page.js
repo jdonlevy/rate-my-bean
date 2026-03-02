@@ -24,6 +24,9 @@ export default async function BeanDetailPage({ params }) {
       <div className="hero-card">
         <span className="pill">Bean detail</span>
         <h1>{bean.name}</h1>
+        {bean.reviewer_name ? (
+          <p className="muted">Reviewed by {bean.reviewer_name}</p>
+        ) : null}
         {bean.roaster_url ? (
           <a className="link" href={bean.roaster_url} target="_blank" rel="noreferrer">
             Visit roaster website
@@ -52,8 +55,8 @@ export default async function BeanDetailPage({ params }) {
             <p>{bean.roast_level || "—"}</p>
           </div>
           <div className="card">
-            <h3>Price (USD)</h3>
-            <p>{bean.price_usd ? `$${bean.price_usd}` : "—"}</p>
+            <h3>Price (GBP)</h3>
+            <p>{bean.price_usd ? `£${bean.price_usd}` : "—"}</p>
           </div>
         </div>
 
@@ -128,7 +131,7 @@ export default async function BeanDetailPage({ params }) {
                 <div className="card" key={rating.id}>
                   <p className="rating">{rating.score}★</p>
                   <p className="muted">
-                    {rating.price_paid ? `$${rating.price_paid}` : "No price"}
+                    {rating.price_paid ? `£${rating.price_paid}` : "No price"}
                   </p>
                   <p>{rating.notes || "No notes"}</p>
                   {(rating.bag_image_type || rating.coffee_image_type) && (

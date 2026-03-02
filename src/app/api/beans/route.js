@@ -25,6 +25,7 @@ export async function POST(request) {
   const name = body.get("name");
   const originCountry = body.get("originCountry");
   const roaster = body.get("roaster");
+  const reviewerName = body.get("reviewerName");
   const roasterUrlInput = body.get("roasterUrl");
   const originRegion = body.get("originRegion");
   const blend = body.get("blend");
@@ -167,6 +168,7 @@ export async function POST(request) {
 
   const id = await createBean({
     name: name.trim(),
+    reviewerName: reviewerName?.toString().trim() || "",
     roaster: roaster?.toString().trim() || "",
     roasterUrl,
     originCountry: originCountry.toString().trim(),

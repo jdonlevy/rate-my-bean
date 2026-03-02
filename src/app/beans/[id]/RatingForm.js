@@ -75,7 +75,7 @@ export default function RatingForm({ beanId, canRate }) {
       </div>
 
       <div className="form-row">
-        <label htmlFor="pricePaid">Price paid (USD)</label>
+        <label htmlFor="pricePaid">Price paid (GBP)</label>
         <input
           id="pricePaid"
           name="pricePaid"

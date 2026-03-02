@@ -70,6 +70,7 @@ const initPromise = (async () => {
       CREATE TABLE IF NOT EXISTS beans (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT NOT NULL,
+        reviewer_name TEXT,
         roaster TEXT,
         roaster_url TEXT,
         origin_country TEXT NOT NULL,
@@ -144,6 +145,9 @@ const initPromise = (async () => {
   if (!(await hasColumn("beans", "created_by"))) {
     await db.execute("ALTER TABLE beans ADD COLUMN created_by TEXT");
   }
+  if (!(await hasColumn("beans", "reviewer_name"))) {
+    await db.execute("ALTER TABLE beans ADD COLUMN reviewer_name TEXT");
+  }
   if (!(await hasColumn("beans", "roaster_url"))) {
     await db.execute("ALTER TABLE beans ADD COLUMN roaster_url TEXT");
   }
@@ -202,6 +206,7 @@ export async function createBean(data) {
     sql: `
       INSERT INTO beans (
         name,
+        reviewer_name,
         roaster,
         roaster_url,
         origin_country,
@@ -216,10 +221,11 @@ export async function createBean(data) {
         bag_image_type,
         coffee_image,
         coffee_image_type
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `,
     args: [
       data.name,
+      data.reviewerName || null,
       data.roaster || null,
       data.roasterUrl || null,
       data.originCountry,
@@ -292,6 +298,7 @@ export async function getBeans() {
       SELECT
         b.id,
         b.name,
+        b.reviewer_name,
         b.roaster,
         b.origin_country,
         b.origin_region,
@@ -319,6 +326,7 @@ export async function getBeanById(id) {
       SELECT
         b.id,
         b.name,
+        b.reviewer_name,
         b.roaster,
         b.roaster_url,
         b.origin_country,

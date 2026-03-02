@@ -8,7 +8,7 @@ export default async function NewBeanPage() {
 
   return (
     <section className="hero-card">
-      <h1>Add a Bean</h1>
+      <h1>Add a Blend</h1>
       <p className="muted">
         Start with the essentials. You can add more details later.
       </p>
@@ -17,7 +17,7 @@ export default async function NewBeanPage() {
         <NewBeanForm suggestions={suggestions} />
       ) : (
         <div className="card">
-          <p className="muted">Sign in to add a bean.</p>
+          <p className="muted">Sign in to add a blend.</p>
           <a className="button" href="/api/auth/signin">
             Sign in
           </a>
