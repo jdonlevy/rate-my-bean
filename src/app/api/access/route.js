@@ -15,7 +15,6 @@ export async function POST(request) {
     httpOnly: true,
     sameSite: "lax",
     path: "/",
-    maxAge: 60 * 60 * 24,
   });
   return response;
 }
