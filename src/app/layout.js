@@ -39,7 +39,9 @@ export default async function RootLayout({ children }) {
             </nav>
             <div className="auth-actions">
               {process.env.VERCEL_ENV === "preview" ? (
-                <span className="muted">Login disabled in preview</span>
+                <span className="button disabled" aria-disabled="true">
+                  Sign in (preview)
+                </span>
               ) : session?.user ? (
                 <>
                   <span className="muted">{session.user.email}</span>

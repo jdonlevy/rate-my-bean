@@ -14,7 +14,9 @@ export async function GET() {
 
 export async function POST(request) {
   const session = await auth();
-  if (!session?.user?.email) {
+  const isPreview = process.env.VERCEL_ENV === "preview";
+  const userEmail = session?.user?.email || (isPreview ? "preview@local" : null);
+  if (!userEmail) {
     return Response.json(
       { error: "Sign in required to add a bean." },
       { status: 401 }
@@ -178,7 +180,7 @@ export async function POST(request) {
     roastLevel: roastLevel?.toString().trim() || "",
     priceUsd: priceUsd === "" || priceUsd == null ? null : Number(priceUsd),
     flavorNotes: flavorNotes?.toString().trim() || "",
-    createdBy: session.user.email,
+    createdBy: userEmail,
     bagImage: bagImageData.buffer,
     bagImageType: bagImageData.type,
     coffeeImage: coffeeImageData.buffer,
@@ -190,7 +192,7 @@ export async function POST(request) {
       score: scoreValue,
       notes: notesValue,
       pricePaid: pricePaidValue,
-      createdBy: session.user.email,
+      createdBy: userEmail,
     });
   }
 

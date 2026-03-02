@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-export default function RatingForm({ beanId, canRate }) {
+export default function RatingForm({ beanId, canRate, authDisabled = false }) {
   const [form, setForm] = useState({
     score: "5",
     notes: "",
@@ -54,9 +54,15 @@ export default function RatingForm({ beanId, canRate }) {
     return (
       <div className="card">
         <p className="muted">Sign in to add a rating.</p>
-        <a className="button" href="/api/auth/signin">
-          Sign in
-        </a>
+        {authDisabled ? (
+          <span className="button disabled" aria-disabled="true">
+            Sign in (preview)
+          </span>
+        ) : (
+          <a className="button" href="/api/auth/signin">
+            Sign in
+          </a>
+        )}
       </div>
     );
   }

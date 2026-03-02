@@ -5,6 +5,7 @@ import NewBeanForm from "./NewBeanForm";
 export default async function NewBeanPage() {
   const session = await auth();
   const suggestions = await getBeanFieldSuggestions();
+  const isPreview = process.env.VERCEL_ENV === "preview";
 
   return (
     <section className="hero-card">
@@ -13,7 +14,7 @@ export default async function NewBeanPage() {
         Start with the essentials. You can add more details later.
       </p>
 
-      {session?.user ? (
+      {session?.user || isPreview ? (
         <NewBeanForm suggestions={suggestions} />
       ) : (
         <div className="card">

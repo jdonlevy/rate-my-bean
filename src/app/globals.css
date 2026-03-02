@@ -461,6 +461,15 @@ a {
   transform: translateY(-1px);
 }
 
+.button.disabled,
+.button[aria-disabled="true"] {
+  cursor: not-allowed;
+  background: rgba(31, 111, 67, 0.28);
+  color: rgba(255, 255, 255, 0.7);
+  box-shadow: none;
+  transform: none;
+}
+
 .link {
   color: var(--accent);
   font-weight: 600;

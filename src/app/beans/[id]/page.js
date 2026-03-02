@@ -7,6 +7,7 @@ export default async function BeanDetailPage({ params }) {
   const id = Number(rawId);
   const bean = Number.isInteger(id) ? await getBeanById(id) : null;
   const session = await auth();
+  const isPreview = process.env.VERCEL_ENV === "preview";
 
   if (!bean) {
     return (
@@ -120,7 +121,11 @@ export default async function BeanDetailPage({ params }) {
 
       <div className="hero-card">
         <h2>Add a rating</h2>
-        <RatingForm beanId={id} canRate={Boolean(session?.user)} />
+        <RatingForm
+          beanId={id}
+          canRate={Boolean(session?.user) || isPreview}
+          authDisabled={isPreview}
+        />
         <div className="card">
           <h3>Recent ratings</h3>
           {ratings.length === 0 ? (
