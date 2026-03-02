@@ -76,6 +76,7 @@ export default function RatingForm({ beanId, canRate }) {
           type="number"
           step="0.01"
           min="0"
+          required
         />
       </div>
 
@@ -87,6 +88,7 @@ export default function RatingForm({ beanId, canRate }) {
           rows={3}
           value={form.notes}
           onChange={updateField}
+          required
         />
       </div>
 

@@ -1,8 +1,10 @@
 import { auth } from "@/auth";
+import { getBeanFieldSuggestions } from "@/lib/db";
 import NewBeanForm from "./NewBeanForm";
 
 export default async function NewBeanPage() {
   const session = await auth();
+  const suggestions = getBeanFieldSuggestions();
 
   return (
     <section className="hero-card">
@@ -12,7 +14,7 @@ export default async function NewBeanPage() {
       </p>
 
       {session?.user ? (
-        <NewBeanForm />
+        <NewBeanForm suggestions={suggestions} />
       ) : (
         <div className="card">
           <p className="muted">Sign in to add a bean.</p>
