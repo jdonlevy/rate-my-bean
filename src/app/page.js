@@ -1,6 +1,8 @@
 import RegionMap from "@/components/RegionMap";
 import { getBeans, getStats, getTopRegions } from "@/lib/db";
 
+export const dynamic = "force-dynamic";
+
 const COUNTRY_COORDS = {
   Brazil: { x: 35, y: 64 },
   Colombia: { x: 26, y: 46 },

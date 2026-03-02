@@ -2,6 +2,8 @@ import { auth } from "@/auth";
 import { getBeanById, getRatingsForBean } from "@/lib/db";
 import RatingForm from "./RatingForm";
 
+export const dynamic = "force-dynamic";
+
 export default async function BeanDetailPage({ params }) {
   const { id: rawId } = await params;
   const id = Number(rawId);
