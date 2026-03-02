@@ -55,9 +55,7 @@ export default function RatingForm({ beanId, canRate, authDisabled = false }) {
       <div className="card">
         <p className="muted">Sign in to add a rating.</p>
         {authDisabled ? (
-          <span className="button disabled" aria-disabled="true">
-            Sign in (preview)
-          </span>
+          <p className="muted">Login is disabled in preview.</p>
         ) : (
           <a className="button" href="/api/auth/signin">
             Sign in

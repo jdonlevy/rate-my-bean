@@ -31,7 +31,7 @@ export async function POST(request) {
   const roasterUrlInput = body.get("roasterUrl");
   const originRegion = body.get("originRegion");
   const blend = body.get("blend");
-  const process = body.get("process");
+  const processMethod = body.get("process");
   const roastLevel = body.get("roastLevel");
   const priceUsd = body.get("priceUsd");
   const flavorNotes = body.get("flavorNotes");
@@ -176,7 +176,7 @@ export async function POST(request) {
     originCountry: originCountry.toString().trim(),
     originRegion: originRegion?.toString().trim() || "",
     blend: String(blend) === "true",
-    process: process?.toString().trim() || "",
+    process: processMethod?.toString().trim() || "",
     roastLevel: roastLevel?.toString().trim() || "",
     priceUsd: priceUsd === "" || priceUsd == null ? null : Number(priceUsd),
     flavorNotes: flavorNotes?.toString().trim() || "",
