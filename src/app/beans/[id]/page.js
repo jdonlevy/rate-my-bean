@@ -24,6 +24,11 @@ export default async function BeanDetailPage({ params }) {
       <div className="hero-card">
         <span className="pill">Bean detail</span>
         <h1>{bean.name}</h1>
+        {bean.roaster_url ? (
+          <a className="link" href={bean.roaster_url} target="_blank" rel="noreferrer">
+            Visit roaster website
+          </a>
+        ) : null}
         <p className="muted">
           {bean.origin_country}
           {bean.origin_region ? ` · ${bean.origin_region}` : ""}
@@ -51,6 +56,46 @@ export default async function BeanDetailPage({ params }) {
             <p>{bean.price_usd ? `$${bean.price_usd}` : "—"}</p>
           </div>
         </div>
+
+        {(bean.bag_image_type || bean.coffee_image_type) && (
+          <div className="card">
+            <h3>Photos</h3>
+            <div className="photo-grid">
+              {bean.bag_image_type && (
+                <div>
+                  <p className="muted">Bag</p>
+                  {["image/heic", "image/heif"].includes(bean.bag_image_type) ? (
+                    <a className="link" href={`/api/beans/${id}/image?kind=bag`}>
+                      Download HEIC
+                    </a>
+                  ) : (
+                    <img
+                      className="bean-photo"
+                      src={`/api/beans/${id}/image?kind=bag`}
+                      alt="Coffee bag"
+                    />
+                  )}
+                </div>
+              )}
+              {bean.coffee_image_type && (
+                <div>
+                  <p className="muted">Brew</p>
+                  {["image/heic", "image/heif"].includes(bean.coffee_image_type) ? (
+                    <a className="link" href={`/api/beans/${id}/image?kind=coffee`}>
+                      Download HEIC
+                    </a>
+                  ) : (
+                    <img
+                      className="bean-photo"
+                      src={`/api/beans/${id}/image?kind=coffee`}
+                      alt="Coffee brew"
+                    />
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         <div className="card">
           <h3>Flavor notes</h3>

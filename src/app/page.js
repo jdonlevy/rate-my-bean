@@ -1,8 +1,9 @@
-import { getBeans, getTopRegions } from "@/lib/db";
+import { getBeans, getStats, getTopRegions } from "@/lib/db";
 
 export default function Home() {
   const beans = getBeans();
-  const topRegions = getTopRegions(5);
+  const topRegions = getTopRegions(3);
+  const stats = getStats();
 
   return (
     <div className="home">
@@ -33,8 +34,28 @@ export default function Home() {
               ))}
             </div>
           )}
+          <a className="link" href="/leaderboard">
+            View full leaderboard →
+          </a>
         </div>
       </section>
+
+      <section className="stats">
+        <div className="stat-card">
+          <p className="stat-label">Beans Logged</p>
+          <p className="stat-value">{stats.beanCount}</p>
+        </div>
+        <div className="stat-card">
+          <p className="stat-label">Ratings</p>
+          <p className="stat-value">{stats.ratingCount}</p>
+        </div>
+        <div className="stat-card">
+          <p className="stat-label">Average Score</p>
+          <p className="stat-value">{Number(stats.avgScore).toFixed(1)}★</p>
+        </div>
+      </section>
+
+      <div className="section-divider" role="presentation" />
 
       <section>
         <h2>All Beans</h2>
@@ -53,7 +74,10 @@ export default function Home() {
                 </div>
                 <div>
                   <p className="rating">
-                    {bean.avg_score ? Number(bean.avg_score).toFixed(1) : "—"}★
+                    {Number.isFinite(Number(bean.avg_score))
+                      ? Number(bean.avg_score).toFixed(1)
+                      : "0.0"}
+                    ★
                   </p>
                   <p className="muted">{bean.rating_count} ratings</p>
                 </div>
