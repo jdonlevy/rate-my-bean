@@ -1,9 +1,9 @@
 import { getBeans, getStats, getTopRegions } from "@/lib/db";
 
-export default function Home() {
-  const beans = getBeans();
-  const topRegions = getTopRegions(3);
-  const stats = getStats();
+export default async function Home() {
+  const beans = await getBeans();
+  const topRegions = await getTopRegions(3);
+  const stats = await getStats();
 
   return (
     <div className="home">

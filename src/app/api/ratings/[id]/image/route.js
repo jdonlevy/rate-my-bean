@@ -1,10 +1,10 @@
-import { getBeanImagesById } from "@/lib/db";
+import { getRatingImagesById } from "@/lib/db";
 
 export async function GET(request, { params }) {
   const { id: rawId } = await params;
   const id = Number(rawId);
   if (!Number.isInteger(id)) {
-    return new Response("Invalid bean id", { status: 400 });
+    return new Response("Invalid rating id", { status: 400 });
   }
 
   const url = new URL(request.url);
@@ -13,7 +13,7 @@ export async function GET(request, { params }) {
     return new Response("Invalid image kind", { status: 400 });
   }
 
-  const images = await getBeanImagesById(id);
+  const images = await getRatingImagesById(id);
   if (!images) {
     return new Response("Not found", { status: 404 });
   }

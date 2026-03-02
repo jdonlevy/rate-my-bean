@@ -5,7 +5,7 @@ import RatingForm from "./RatingForm";
 export default async function BeanDetailPage({ params }) {
   const { id: rawId } = await params;
   const id = Number(rawId);
-  const bean = Number.isInteger(id) ? getBeanById(id) : null;
+  const bean = Number.isInteger(id) ? await getBeanById(id) : null;
   const session = await auth();
 
   if (!bean) {
@@ -17,7 +17,7 @@ export default async function BeanDetailPage({ params }) {
     );
   }
 
-  const ratings = getRatingsForBean(id);
+  const ratings = await getRatingsForBean(id);
 
   return (
     <section className="split">
@@ -69,11 +69,17 @@ export default async function BeanDetailPage({ params }) {
                       Download HEIC
                     </a>
                   ) : (
-                    <img
-                      className="bean-photo"
-                      src={`/api/beans/${id}/image?kind=bag`}
-                      alt="Coffee bag"
-                    />
+                    <a
+                      href={`/api/beans/${id}/image?kind=bag`}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      <img
+                        className="bean-photo"
+                        src={`/api/beans/${id}/image?kind=bag`}
+                        alt="Coffee bag"
+                      />
+                    </a>
                   )}
                 </div>
               )}
@@ -85,11 +91,17 @@ export default async function BeanDetailPage({ params }) {
                       Download HEIC
                     </a>
                   ) : (
-                    <img
-                      className="bean-photo"
-                      src={`/api/beans/${id}/image?kind=coffee`}
-                      alt="Coffee brew"
-                    />
+                    <a
+                      href={`/api/beans/${id}/image?kind=coffee`}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      <img
+                        className="bean-photo"
+                        src={`/api/beans/${id}/image?kind=coffee`}
+                        alt="Coffee brew"
+                      />
+                    </a>
                   )}
                 </div>
               )}
@@ -119,6 +131,64 @@ export default async function BeanDetailPage({ params }) {
                     {rating.price_paid ? `$${rating.price_paid}` : "No price"}
                   </p>
                   <p>{rating.notes || "No notes"}</p>
+                  {(rating.bag_image_type || rating.coffee_image_type) && (
+                    <div className="photo-grid">
+                      {rating.bag_image_type && (
+                        <div>
+                          <p className="muted">Bag</p>
+                          {["image/heic", "image/heif"].includes(
+                            rating.bag_image_type
+                          ) ? (
+                            <a
+                              className="link"
+                              href={`/api/ratings/${rating.id}/image?kind=bag`}
+                            >
+                              Download HEIC
+                            </a>
+                          ) : (
+                            <a
+                              href={`/api/ratings/${rating.id}/image?kind=bag`}
+                              target="_blank"
+                              rel="noreferrer"
+                            >
+                              <img
+                                className="bean-photo"
+                                src={`/api/ratings/${rating.id}/image?kind=bag`}
+                                alt="Rating bag"
+                              />
+                            </a>
+                          )}
+                        </div>
+                      )}
+                      {rating.coffee_image_type && (
+                        <div>
+                          <p className="muted">Brew</p>
+                          {["image/heic", "image/heif"].includes(
+                            rating.coffee_image_type
+                          ) ? (
+                            <a
+                              className="link"
+                              href={`/api/ratings/${rating.id}/image?kind=coffee`}
+                            >
+                              Download HEIC
+                            </a>
+                          ) : (
+                            <a
+                              href={`/api/ratings/${rating.id}/image?kind=coffee`}
+                              target="_blank"
+                              rel="noreferrer"
+                            >
+                              <img
+                                className="bean-photo"
+                                src={`/api/ratings/${rating.id}/image?kind=coffee`}
+                                alt="Rating brew"
+                              />
+                            </a>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

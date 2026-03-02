@@ -22,10 +22,18 @@ export default function RatingForm({ beanId, canRate }) {
     setSaving(true);
 
     try {
+      const formData = new FormData();
+      formData.append("score", form.score);
+      formData.append("notes", form.notes);
+      formData.append("pricePaid", form.pricePaid);
+      const bagImage = event.currentTarget.bagImage.files?.[0];
+      const coffeeImage = event.currentTarget.coffeeImage.files?.[0];
+      if (bagImage) formData.append("bagImage", bagImage);
+      if (coffeeImage) formData.append("coffeeImage", coffeeImage);
+
       const res = await fetch(`/api/beans/${beanId}/ratings`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: formData,
       });
 
       if (!res.ok) {
@@ -89,6 +97,26 @@ export default function RatingForm({ beanId, canRate }) {
           value={form.notes}
           onChange={updateField}
           required
+        />
+      </div>
+
+      <div className="form-row">
+        <label htmlFor="bagImage">Bag photo (optional)</label>
+        <input
+          id="bagImage"
+          name="bagImage"
+          type="file"
+          accept="image/jpeg,image/png,image/heic,image/heif"
+        />
+      </div>
+
+      <div className="form-row">
+        <label htmlFor="coffeeImage">Brew photo (optional)</label>
+        <input
+          id="coffeeImage"
+          name="coffeeImage"
+          type="file"
+          accept="image/jpeg,image/png,image/heic,image/heif"
         />
       </div>
 

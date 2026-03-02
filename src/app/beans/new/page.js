@@ -4,7 +4,7 @@ import NewBeanForm from "./NewBeanForm";
 
 export default async function NewBeanPage() {
   const session = await auth();
-  const suggestions = getBeanFieldSuggestions();
+  const suggestions = await getBeanFieldSuggestions();
 
   return (
     <section className="hero-card">

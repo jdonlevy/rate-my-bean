@@ -1,7 +1,7 @@
 import { getTopRegions } from "@/lib/db";
 
-export default function LeaderboardPage() {
-  const topRegions = getTopRegions(50);
+export default async function LeaderboardPage() {
+  const topRegions = await getTopRegions(50);
 
   return (
     <section className="hero-card">

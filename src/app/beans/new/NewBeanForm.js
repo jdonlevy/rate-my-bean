@@ -11,8 +11,6 @@ const initialState = {
   blend: false,
   process: "",
   roastLevel: "",
-  priceUsd: "",
-  flavorNotes: "",
   roasterUrl: "",
   ratingScore: "",
   ratingNotes: "",
@@ -516,6 +514,12 @@ export default function NewBeanForm({ suggestions }) {
                 ? ` · ${fuzzyMatches.comboMatch.origin_region}`
                 : ""}
             </p>
+            <a className="link" href={`/beans/${fuzzyMatches.comboMatch.id}`}>
+              View bean and add your rating →
+            </a>
+            <p className="muted">
+              You can add your own rating with bag and brew photos.
+            </p>
           </div>
         ) : null}
       <div className="form-row">
@@ -581,30 +585,6 @@ export default function NewBeanForm({ suggestions }) {
           <option value="Medium-dark">Medium-dark</option>
           <option value="Dark">Dark</option>
         </select>
-      </div>
-
-      <div className="form-row">
-        <label htmlFor="priceUsd">Price (GBP)</label>
-        <input
-          id="priceUsd"
-          name="priceUsd"
-          value={form.priceUsd}
-          onChange={updateField}
-          type="number"
-          step="0.01"
-          min="0"
-        />
-      </div>
-
-      <div className="form-row">
-        <label htmlFor="flavorNotes">Flavor notes</label>
-        <textarea
-          id="flavorNotes"
-          name="flavorNotes"
-          value={form.flavorNotes}
-          onChange={updateField}
-          rows={4}
-        />
       </div>
 
       <div className="card">

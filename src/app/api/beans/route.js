@@ -7,8 +7,8 @@ import path from "path";
 import os from "os";
 
 export async function GET() {
-  const beans = getBeans();
-  const suggestions = getBeanFieldSuggestions();
+  const beans = await getBeans();
+  const suggestions = await getBeanFieldSuggestions();
   return Response.json({ beans, suggestions });
 }
 
@@ -45,7 +45,7 @@ export async function POST(request) {
     );
   }
 
-  const duplicate = findDuplicateBean({
+  const duplicate = await findDuplicateBean({
     name: name.toString(),
     roaster: roaster?.toString() || "",
     originCountry: originCountry.toString(),
@@ -165,7 +165,7 @@ export async function POST(request) {
     return Response.json({ error: "rating price is required" }, { status: 400 });
   }
 
-  const id = createBean({
+  const id = await createBean({
     name: name.trim(),
     roaster: roaster?.toString().trim() || "",
     roasterUrl,
@@ -184,7 +184,7 @@ export async function POST(request) {
   });
 
   if (scoreValue != null) {
-    addRating(id, {
+    await addRating(id, {
       score: scoreValue,
       notes: notesValue,
       pricePaid: pricePaidValue,
