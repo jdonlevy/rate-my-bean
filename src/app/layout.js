@@ -38,7 +38,9 @@ export default async function RootLayout({ children }) {
               <a href="/beans/new">Add Blend</a>
             </nav>
             <div className="auth-actions">
-              {session?.user ? (
+              {process.env.VERCEL_ENV === "preview" ? (
+                <span className="muted">Login disabled in preview</span>
+              ) : session?.user ? (
                 <>
                   <span className="muted">{session.user.email}</span>
                   <a href="/api/auth/signout">Sign out</a>
