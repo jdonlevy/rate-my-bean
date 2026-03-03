@@ -1,24 +1,29 @@
-import RegionMap from "@/components/RegionMap";
+import dynamic from "next/dynamic";
 import { getBeans, getStats, getTopRegions } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
+const RegionLeafletMap = dynamic(() => import("@/components/RegionLeafletMap"), {
+  ssr: false,
+});
+
 const COUNTRY_COORDS = {
-  Brazil: { x: 35, y: 64 },
-  Colombia: { x: 26, y: 46 },
-  Guatemala: { x: 22, y: 44 },
-  "Costa Rica": { x: 23.5, y: 48 },
-  Honduras: { x: 23, y: 45 },
-  "El Salvador": { x: 24, y: 46.5 },
-  Nicaragua: { x: 24.5, y: 48.5 },
-  Mexico: { x: 17, y: 40 },
-  Peru: { x: 30, y: 63 },
-  Ethiopia: { x: 62, y: 56 },
-  Kenya: { x: 60, y: 58 },
-  Rwanda: { x: 58, y: 60 },
-  Burundi: { x: 58.5, y: 61.5 },
-  Indonesia: { x: 79, y: 72 },
-  "Papua New Guinea": { x: 86, y: 74 },
+  Brazil: { lat: -10, lng: -55 },
+  Colombia: { lat: 4, lng: -74 },
+  Guatemala: { lat: 15.5, lng: -90.2 },
+  "Costa Rica": { lat: 9.8, lng: -84.2 },
+  Honduras: { lat: 15.2, lng: -86.4 },
+  "El Salvador": { lat: 13.8, lng: -88.9 },
+  Nicaragua: { lat: 12.8, lng: -85.1 },
+  Mexico: { lat: 23.6, lng: -102.5 },
+  Peru: { lat: -9.2, lng: -75 },
+  Ethiopia: { lat: 9.1, lng: 40.5 },
+  Kenya: { lat: 0.2, lng: 37.9 },
+  Rwanda: { lat: -1.9, lng: 29.9 },
+  Burundi: { lat: -3.4, lng: 29.9 },
+  Indonesia: { lat: -2.5, lng: 118 },
+  "Papua New Guinea": { lat: -6.3, lng: 147 },
+  "United Kingdom": { lat: 54, lng: -2 },
 };
 
 export default async function Home() {
@@ -32,8 +37,8 @@ export default async function Home() {
       return {
         country: region.origin_country,
         region: region.origin_region,
-        x: coord.x,
-        y: coord.y,
+        lat: coord.lat,
+        lng: coord.lng,
       };
     })
     .filter(Boolean);
@@ -41,15 +46,16 @@ export default async function Home() {
   return (
     <div className="home">
       <section className="hero">
-        <div className="hero-card">
-          <span className="pill">Local MVP</span>
-          <h1>Rate coffee beans like a pro.</h1>
-          <p>
-            Track beans, blends, origins, and flavor notes. Compare ratings and
-            see which regions deliver the best value.
-          </p>
-          <div className="mini-map">
-            <RegionMap pins={pins} size="mini" />
+        <div className="hero-card map-card">
+          <div className="map-header">
+            <span className="pill">Origin map</span>
+            <h1>Global bean origins.</h1>
+            <p>
+              Explore where top-rated beans are coming from, in real time.
+            </p>
+          </div>
+          <div className="map-frame">
+            <RegionLeafletMap pins={pins} />
           </div>
         </div>
         <div className="hero-card">

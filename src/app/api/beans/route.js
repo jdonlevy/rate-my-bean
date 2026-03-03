@@ -1,5 +1,12 @@
 import { auth } from "@/auth";
-import { addRating, createBean, findDuplicateBean, getBeans, getBeanFieldSuggestions } from "@/lib/db";
+import {
+  addRating,
+  createBean,
+  findDuplicateBean,
+  getBeans,
+  getBeanFieldSuggestions,
+  isValidCountryRegion,
+} from "@/lib/db";
 import { execFile } from "child_process";
 import { promisify } from "util";
 import fs from "fs/promises";
@@ -44,6 +51,17 @@ export async function POST(request) {
   if (!name || !originCountry) {
     return Response.json(
       { error: "name and originCountry are required" },
+      { status: 400 }
+    );
+  }
+
+  const validLocation = await isValidCountryRegion(
+    originCountry.toString(),
+    originRegion?.toString() || ""
+  );
+  if (!validLocation) {
+    return Response.json(
+      { error: "Select a valid origin country/region from the list." },
       { status: 400 }
     );
   }

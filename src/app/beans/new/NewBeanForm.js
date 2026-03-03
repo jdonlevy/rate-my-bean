@@ -262,14 +262,23 @@ function SearchSelect({
   options,
   required,
   placeholder,
+  allowCustom = true,
 }) {
   const [open, setOpen] = useState(false);
+  const [touched, setTouched] = useState(false);
 
   const filtered = useMemo(() => {
     const query = normalize(value);
     if (!query) return options;
     return options.filter((option) => normalize(option).includes(query));
   }, [value, options]);
+
+  const isValidSelection = useMemo(() => {
+    if (allowCustom) return true;
+    const normalizedValue = normalize(value);
+    if (!normalizedValue) return false;
+    return options.some((option) => normalize(option) === normalizedValue);
+  }, [allowCustom, options, value]);
 
   function handleSelect(option) {
     onChange({ target: { name, value: option } });
@@ -288,11 +297,18 @@ function SearchSelect({
           setOpen(true);
         }}
         onFocus={() => setOpen(true)}
-        onBlur={() => setTimeout(() => setOpen(false), 120)}
+        onBlur={() => {
+          setTouched(true);
+          setTimeout(() => setOpen(false), 120);
+        }}
         placeholder={placeholder}
         required={required}
         autoComplete="off"
+        aria-invalid={!isValidSelection}
       />
+      {!allowCustom && touched && !isValidSelection ? (
+        <p className="hint">Choose a value from the list.</p>
+      ) : null}
       {open && filtered.length > 0 ? (
         <div
           className="combo-list"
@@ -320,6 +336,7 @@ export default function NewBeanForm({ suggestions }) {
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
   const router = useRouter();
+  const countryRegions = suggestions?.countryRegions || [];
 
   const fuzzyMatches = useMemo(() => {
     const names = suggestions?.names || [];
@@ -396,6 +413,29 @@ export default function NewBeanForm({ suggestions }) {
     setSaving(true);
 
     try {
+      const normalizedCountry = normalize(form.originCountry);
+      const normalizedRegion = normalize(form.originRegion);
+      const allowedCountries = new Set(
+        countryRegions.map((row) => normalize(row.country))
+      );
+      const allowedRegions = new Set(
+        countryRegions
+          .filter(
+            (row) => normalize(row.country) === normalizedCountry
+          )
+          .map((row) => normalize(row.region))
+      );
+      if (!normalizedCountry || !allowedCountries.has(normalizedCountry)) {
+        setError("Select a valid origin country from the list.");
+        setSaving(false);
+        return;
+      }
+      if (normalizedRegion && !allowedRegions.has(normalizedRegion)) {
+        setError("Select a valid origin region from the list.");
+        setSaving(false);
+        return;
+      }
+
       const formData = new FormData();
       Object.entries(form).forEach(([key, value]) => {
         formData.append(key, value);
@@ -437,6 +477,7 @@ export default function NewBeanForm({ suggestions }) {
             (suggestions?.countryRegions || []).map((row) => row.country)
           )
         ).sort()}
+        allowCustom={false}
         required
         placeholder="Select a country"
       />
@@ -464,6 +505,7 @@ export default function NewBeanForm({ suggestions }) {
         value={form.originRegion}
         onChange={updateField}
         options={regionOptions}
+        allowCustom={false}
         placeholder={
           form.originCountry ? "Select a region" : "Select a country first"
         }
