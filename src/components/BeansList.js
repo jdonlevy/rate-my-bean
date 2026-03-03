@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 function normalize(value) {
   return (value || "")
@@ -26,6 +26,13 @@ export default function BeansList({ beans, initialFilters = {} }) {
     minRating: "",
     ...initialFilters,
   }));
+
+  useEffect(() => {
+    setFilters((prev) => ({
+      ...prev,
+      ...initialFilters,
+    }));
+  }, [initialFilters]);
 
   const countries = useMemo(
     () => unique(beans.map((bean) => bean.origin_country)),
