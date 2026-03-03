@@ -1,11 +1,7 @@
-import dynamicImport from "next/dynamic";
+import HomeMap from "@/components/HomeMap";
 import { getBeans, getStats, getTopRegions } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
-
-const RegionLeafletMap = dynamicImport(() => import("@/components/RegionLeafletMap"), {
-  ssr: false,
-});
 
 const COUNTRY_COORDS = {
   Brazil: { lat: -10, lng: -55 },
@@ -54,9 +50,7 @@ export default async function Home() {
               Explore where top-rated beans are coming from, in real time.
             </p>
           </div>
-          <div className="map-frame">
-            <RegionLeafletMap pins={pins} />
-          </div>
+          <HomeMap pins={pins} />
         </div>
         <div className="hero-card">
           <h2>Top Regions</h2>
