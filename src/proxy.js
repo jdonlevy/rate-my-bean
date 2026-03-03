@@ -10,6 +10,9 @@ function isProtectedPath(pathname) {
 }
 
 export function proxy(request) {
+  if (process.env.PLAYWRIGHT === "true") {
+    return NextResponse.next();
+  }
   if (process.env.VERCEL_ENV === "preview") {
     return NextResponse.next();
   }

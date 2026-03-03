@@ -300,6 +300,7 @@ export async function getBeans() {
         b.name,
         b.reviewer_name,
         b.roaster,
+        b.roaster_url,
         b.origin_country,
         b.origin_region,
         b.blend,
@@ -307,6 +308,8 @@ export async function getBeans() {
         b.roast_level,
         b.price_usd,
         b.flavor_notes,
+        b.bag_image_type,
+        b.coffee_image_type,
         b.created_at,
         AVG(r.score) AS avg_score,
         COUNT(r.id) AS rating_count
@@ -487,6 +490,26 @@ export async function getBeanFieldSuggestions() {
     originRegions: unique(rows.rows.map((row) => row.origin_region)),
     countryRegions: countryRegions.rows,
   };
+}
+
+export async function isValidCountryRegion(country, region) {
+  await ensureInit();
+  const countryCheck = await db.execute({
+    sql: `SELECT 1 FROM country_regions WHERE LOWER(country) = LOWER(?) LIMIT 1`,
+    args: [country],
+  });
+  if (countryCheck.rows.length === 0) return false;
+  if (!region) return true;
+  const regionCheck = await db.execute({
+    sql: `
+      SELECT 1
+      FROM country_regions
+      WHERE LOWER(country) = LOWER(?) AND LOWER(region) = LOWER(?)
+      LIMIT 1
+    `,
+    args: [country, region],
+  });
+  return regionCheck.rows.length > 0;
 }
 
 export async function getRatingImagesById(id) {

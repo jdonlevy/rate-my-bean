@@ -1,56 +1,84 @@
-import RegionMap from "@/components/RegionMap";
+import HomeMap from "@/components/HomeMap";
 import { getBeans, getStats, getTopRegions } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
 const COUNTRY_COORDS = {
-  Brazil: { x: 35, y: 64 },
-  Colombia: { x: 26, y: 46 },
-  Guatemala: { x: 22, y: 44 },
-  "Costa Rica": { x: 23.5, y: 48 },
-  Honduras: { x: 23, y: 45 },
-  "El Salvador": { x: 24, y: 46.5 },
-  Nicaragua: { x: 24.5, y: 48.5 },
-  Mexico: { x: 17, y: 40 },
-  Peru: { x: 30, y: 63 },
-  Ethiopia: { x: 62, y: 56 },
-  Kenya: { x: 60, y: 58 },
-  Rwanda: { x: 58, y: 60 },
-  Burundi: { x: 58.5, y: 61.5 },
-  Indonesia: { x: 79, y: 72 },
-  "Papua New Guinea": { x: 86, y: 74 },
+  Brazil: { lat: -10, lng: -55 },
+  Colombia: { lat: 4, lng: -74 },
+  Guatemala: { lat: 15.5, lng: -90.2 },
+  "Costa Rica": { lat: 9.8, lng: -84.2 },
+  Honduras: { lat: 15.2, lng: -86.4 },
+  "El Salvador": { lat: 13.8, lng: -88.9 },
+  Nicaragua: { lat: 12.8, lng: -85.1 },
+  Mexico: { lat: 23.6, lng: -102.5 },
+  Peru: { lat: -9.2, lng: -75 },
+  Ethiopia: { lat: 9.1, lng: 40.5 },
+  Kenya: { lat: 0.2, lng: 37.9 },
+  Rwanda: { lat: -1.9, lng: 29.9 },
+  Burundi: { lat: -3.4, lng: 29.9 },
+  Indonesia: { lat: -2.5, lng: 118 },
+  "Papua New Guinea": { lat: -6.3, lng: 147 },
+  "United Kingdom": { lat: 54, lng: -2 },
 };
+
+function hashString(value) {
+  let hash = 0;
+  for (let i = 0; i < value.length; i += 1) {
+    hash = (hash << 5) - hash + value.charCodeAt(i);
+    hash |= 0;
+  }
+  return Math.abs(hash);
+}
+
+function offsetForRegion(country, region) {
+  if (!region) return { lat: 0, lng: 0 };
+  const seed = hashString(`${country}:${region}`);
+  const angle = ((seed % 360) * Math.PI) / 180;
+  const radius = 0.6 + ((seed >> 8) % 18) / 10;
+  return {
+    lat: Math.sin(angle) * radius,
+    lng: Math.cos(angle) * radius * 1.4,
+  };
+}
 
 export default async function Home() {
   const beans = await getBeans();
   const topRegions = await getTopRegions(3);
   const stats = await getStats();
-  const pins = topRegions
-    .map((region) => {
-      const coord = COUNTRY_COORDS[region.origin_country];
-      if (!coord) return null;
-      return {
-        country: region.origin_country,
-        region: region.origin_region,
-        x: coord.x,
-        y: coord.y,
-      };
-    })
-    .filter(Boolean);
+  const pins = Array.from(
+    new Map(
+      beans
+        .map((bean) => {
+          const coord = COUNTRY_COORDS[bean.origin_country];
+          if (!coord) return null;
+          const offset = offsetForRegion(bean.origin_country, bean.origin_region);
+          return [
+            `${bean.origin_country}-${bean.origin_region || "all"}`,
+            {
+              country: bean.origin_country,
+              region: bean.origin_region,
+              lat: coord.lat + offset.lat,
+              lng: coord.lng + offset.lng,
+            },
+          ];
+        })
+        .filter(Boolean)
+    ).values()
+  );
 
   return (
     <div className="home">
       <section className="hero">
-        <div className="hero-card">
-          <span className="pill">Local MVP</span>
-          <h1>Rate coffee beans like a pro.</h1>
-          <p>
-            Track beans, blends, origins, and flavor notes. Compare ratings and
-            see which regions deliver the best value.
-          </p>
-          <div className="mini-map">
-            <RegionMap pins={pins} size="mini" />
+        <div className="hero-card map-card">
+          <div className="map-header">
+            <span className="pill">Origin map</span>
+            <h1>Global bean origins.</h1>
+            <p>
+              Explore where top-rated beans are coming from, in real time.
+            </p>
           </div>
+          <HomeMap pins={pins} />
         </div>
         <div className="hero-card">
           <h2>Top Regions</h2>
