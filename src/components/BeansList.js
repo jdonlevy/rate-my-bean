@@ -21,6 +21,9 @@ export default function BeansList({ beans }) {
     blend: "",
     process: "",
     roast: "",
+    minPrice: "",
+    maxPrice: "",
+    minRating: "",
   });
 
   const countries = useMemo(
@@ -61,6 +64,24 @@ export default function BeansList({ beans }) {
       if (filters.roast && bean.roast_level !== filters.roast) return false;
       if (filters.blend === "blend" && !bean.blend) return false;
       if (filters.blend === "single" && bean.blend) return false;
+      if (filters.minPrice) {
+        const minPrice = Number(filters.minPrice);
+        if (!Number.isFinite(minPrice)) return false;
+        const price = Number(bean.price_usd);
+        if (!Number.isFinite(price) || price < minPrice) return false;
+      }
+      if (filters.maxPrice) {
+        const maxPrice = Number(filters.maxPrice);
+        if (!Number.isFinite(maxPrice)) return false;
+        const price = Number(bean.price_usd);
+        if (!Number.isFinite(price) || price > maxPrice) return false;
+      }
+      if (filters.minRating) {
+        const minRating = Number(filters.minRating);
+        if (!Number.isFinite(minRating)) return false;
+        const rating = Number(bean.avg_score);
+        if (!Number.isFinite(rating) || rating < minRating) return false;
+      }
       return true;
     });
   }, [beans, filters]);
@@ -134,6 +155,46 @@ export default function BeansList({ beans }) {
               </option>
             ))}
           </select>
+        </div>
+        <div className="form-row">
+          <label htmlFor="minPrice">Min price (GBP)</label>
+          <input
+            id="minPrice"
+            name="minPrice"
+            type="number"
+            step="0.01"
+            min="0"
+            value={filters.minPrice}
+            onChange={updateFilter}
+            placeholder="0.00"
+          />
+        </div>
+        <div className="form-row">
+          <label htmlFor="maxPrice">Max price (GBP)</label>
+          <input
+            id="maxPrice"
+            name="maxPrice"
+            type="number"
+            step="0.01"
+            min="0"
+            value={filters.maxPrice}
+            onChange={updateFilter}
+            placeholder="25.00"
+          />
+        </div>
+        <div className="form-row">
+          <label htmlFor="minRating">Min rating</label>
+          <input
+            id="minRating"
+            name="minRating"
+            type="number"
+            step="0.1"
+            min="0"
+            max="5"
+            value={filters.minRating}
+            onChange={updateFilter}
+            placeholder="4.0"
+          />
         </div>
       </div>
 
