@@ -2,6 +2,7 @@
 
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
+import { useRouter } from "next/navigation";
 import { MapContainer, Marker, Popup, TileLayer } from "react-leaflet";
 
 const pinIcon = L.divIcon({
@@ -12,6 +13,7 @@ const pinIcon = L.divIcon({
 });
 
 export default function RegionLeafletMap({ pins }) {
+  const router = useRouter();
   return (
     <MapContainer
       center={[12, 0]}
@@ -25,7 +27,19 @@ export default function RegionLeafletMap({ pins }) {
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
       {pins.map((pin, index) => (
-        <Marker key={`${pin.country}-${pin.region || "all"}-${index}`} position={[pin.lat, pin.lng]} icon={pinIcon}>
+        <Marker
+          key={`${pin.country}-${pin.region || "all"}-${index}`}
+          position={[pin.lat, pin.lng]}
+          icon={pinIcon}
+          eventHandlers={{
+            click: () => {
+              const params = new URLSearchParams();
+              params.set("country", pin.country);
+              if (pin.region) params.set("region", pin.region);
+              router.push(`/beans?${params.toString()}`);
+            },
+          }}
+        >
           <Popup>
             <strong>{pin.country}</strong>
             {pin.region ? ` · ${pin.region}` : ""}

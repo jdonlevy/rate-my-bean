@@ -13,8 +13,8 @@ function unique(values) {
   return Array.from(new Set(values.filter(Boolean))).sort();
 }
 
-export default function BeansList({ beans }) {
-  const [filters, setFilters] = useState({
+export default function BeansList({ beans, initialFilters = {} }) {
+  const [filters, setFilters] = useState(() => ({
     search: "",
     country: "",
     region: "",
@@ -24,7 +24,8 @@ export default function BeansList({ beans }) {
     minPrice: "",
     maxPrice: "",
     minRating: "",
-  });
+    ...initialFilters,
+  }));
 
   const countries = useMemo(
     () => unique(beans.map((bean) => bean.origin_country)),
