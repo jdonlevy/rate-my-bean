@@ -22,22 +22,50 @@ const COUNTRY_COORDS = {
   "United Kingdom": { lat: 54, lng: -2 },
 };
 
+function hashString(value) {
+  let hash = 0;
+  for (let i = 0; i < value.length; i += 1) {
+    hash = (hash << 5) - hash + value.charCodeAt(i);
+    hash |= 0;
+  }
+  return Math.abs(hash);
+}
+
+function offsetForRegion(country, region) {
+  if (!region) return { lat: 0, lng: 0 };
+  const seed = hashString(`${country}:${region}`);
+  const angle = ((seed % 360) * Math.PI) / 180;
+  const radius = 0.6 + ((seed >> 8) % 18) / 10;
+  return {
+    lat: Math.sin(angle) * radius,
+    lng: Math.cos(angle) * radius * 1.4,
+  };
+}
+
 export default async function Home() {
   const beans = await getBeans();
   const topRegions = await getTopRegions(3);
   const stats = await getStats();
-  const pins = topRegions
-    .map((region) => {
-      const coord = COUNTRY_COORDS[region.origin_country];
-      if (!coord) return null;
-      return {
-        country: region.origin_country,
-        region: region.origin_region,
-        lat: coord.lat,
-        lng: coord.lng,
-      };
-    })
-    .filter(Boolean);
+  const pins = Array.from(
+    new Map(
+      beans
+        .map((bean) => {
+          const coord = COUNTRY_COORDS[bean.origin_country];
+          if (!coord) return null;
+          const offset = offsetForRegion(bean.origin_country, bean.origin_region);
+          return [
+            `${bean.origin_country}-${bean.origin_region || "all"}`,
+            {
+              country: bean.origin_country,
+              region: bean.origin_region,
+              lat: coord.lat + offset.lat,
+              lng: coord.lng + offset.lng,
+            },
+          ];
+        })
+        .filter(Boolean)
+    ).values()
+  );
 
   return (
     <div className="home">
