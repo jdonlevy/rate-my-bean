@@ -1,9 +1,9 @@
-import dynamic from "next/dynamic";
+import dynamicImport from "next/dynamic";
 import { getBeans, getStats, getTopRegions } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
-const RegionLeafletMap = dynamic(() => import("@/components/RegionLeafletMap"), {
+const RegionLeafletMap = dynamicImport(() => import("@/components/RegionLeafletMap"), {
   ssr: false,
 });
 
