@@ -348,6 +348,59 @@ a {
   border-radius: 14px;
 }
 
+.bean-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  margin-top: 24px;
+}
+
+.filter-bar {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.bean-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.bean-row {
+  background: rgba(255, 255, 255, 0.75);
+  border-radius: 18px;
+  padding: 6px 18px;
+  box-shadow: 0 10px 30px rgba(9, 28, 18, 0.12);
+}
+
+.bean-row summary {
+  list-style: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  cursor: pointer;
+  padding: 12px 0;
+}
+
+.bean-row summary::-webkit-details-marker {
+  display: none;
+}
+
+.bean-row-body {
+  padding: 12px 0 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.bean-row-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 8px 16px;
+}
+
 .region-map {
   position: relative;
   width: 100%;

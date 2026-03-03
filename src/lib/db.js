@@ -300,6 +300,7 @@ export async function getBeans() {
         b.name,
         b.reviewer_name,
         b.roaster,
+        b.roaster_url,
         b.origin_country,
         b.origin_region,
         b.blend,
@@ -307,6 +308,8 @@ export async function getBeans() {
         b.roast_level,
         b.price_usd,
         b.flavor_notes,
+        b.bag_image_type,
+        b.coffee_image_type,
         b.created_at,
         AVG(r.score) AS avg_score,
         COUNT(r.id) AS rating_count
