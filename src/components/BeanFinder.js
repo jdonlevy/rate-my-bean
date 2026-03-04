@@ -33,6 +33,14 @@ export default function BeanFinder() {
 
   const center = useMemo(() => [20, 0], []);
 
+  useEffect(() => {
+    if (!mapRef) return;
+    mapRef.invalidateSize();
+    const handleResize = () => mapRef.invalidateSize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, [mapRef]);
+
   async function fetchRoasteries(bounds) {
     if (!bounds) return;
     setLoading(true);
@@ -117,6 +125,30 @@ export default function BeanFinder() {
             </div>
           ) : null}
           {loading ? <p className="muted">Loading roasteries…</p> : null}
+          <div className="finder-list">
+            <h3>Nearby roasteries</h3>
+            {roasteries.length === 0 ? (
+              <p className="muted">Move the map to load roasteries.</p>
+            ) : (
+              <ul>
+                {roasteries.slice(0, 8).map((roastery) => (
+                  <li key={roastery.id}>
+                    <button
+                      type="button"
+                      onClick={() => router.push(`/roasters/${roastery.id}`)}
+                    >
+                      <span>{roastery.name}</span>
+                      <span className="muted">
+                        {[roastery.city, roastery.region]
+                          .filter(Boolean)
+                          .join(" · ")}
+                      </span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
         </div>
       </div>
       <div className="finder-map">
