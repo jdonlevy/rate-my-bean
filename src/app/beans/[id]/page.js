@@ -35,6 +35,11 @@ export default async function BeanDetailPage({ params }) {
             Visit roaster website
           </a>
         ) : null}
+        {bean.roastery_id ? (
+          <a className="link" href={`/roasters/${bean.roastery_id}`}>
+            View roastery details →
+          </a>
+        ) : null}
         <p className="muted">
           {bean.origin_country}
           {bean.origin_region ? ` · ${bean.origin_region}` : ""}

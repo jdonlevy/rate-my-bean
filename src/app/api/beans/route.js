@@ -36,6 +36,7 @@ export async function POST(request) {
   const roaster = body.get("roaster");
   const reviewerName = body.get("reviewerName");
   const roasterUrlInput = body.get("roasterUrl");
+  const roasteryIdRaw = body.get("roasteryId");
   const originRegion = body.get("originRegion");
   const blend = body.get("blend");
   const processMethod = body.get("process");
@@ -51,6 +52,13 @@ export async function POST(request) {
   if (!name || !originCountry) {
     return Response.json(
       { error: "name and originCountry are required" },
+      { status: 400 }
+    );
+  }
+  const roasteryId = roasteryIdRaw ? Number(roasteryIdRaw) : null;
+  if (!Number.isInteger(roasteryId)) {
+    return Response.json(
+      { error: "roasteryId is required" },
       { status: 400 }
     );
   }
@@ -95,6 +103,7 @@ export async function POST(request) {
     roaster: roaster?.toString() || "",
     originCountry: originCountry.toString(),
     originRegion: originRegion?.toString() || "",
+    roasteryId,
   });
   if (duplicate) {
     return Response.json(
@@ -221,6 +230,7 @@ export async function POST(request) {
     reviewerName: reviewerName?.toString().trim() || "",
     roaster: roaster?.toString().trim() || "",
     roasterUrl,
+    roasteryId,
     originCountry: originCountry.toString().trim(),
     originRegion: originRegion?.toString().trim() || "",
     blend: String(blend) === "true",

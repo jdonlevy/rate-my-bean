@@ -219,6 +219,9 @@ export default function BeansList({ beans, initialFilters = {} }) {
                     {bean.origin_country}
                     {bean.origin_region ? ` · ${bean.origin_region}` : ""}
                   </p>
+                  {bean.roastery_name ? (
+                    <p className="muted">Roastery: {bean.roastery_name}</p>
+                  ) : null}
                 </div>
                 <div>
                   <p className="rating">
