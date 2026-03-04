@@ -6,6 +6,8 @@ function isProtectedPath(pathname) {
   if (pathname.startsWith("/api/auth")) return false;
   if (pathname.startsWith("/api/access")) return false;
   if (pathname.startsWith("/access")) return false;
+  if (pathname.startsWith("/login")) return false;
+  if (pathname.startsWith("/signup")) return false;
   return true;
 }
 
@@ -20,6 +22,8 @@ export function proxy(request) {
   const { pathname } = request.nextUrl;
   if (pathname.startsWith("/access")) return NextResponse.next();
   if (pathname.startsWith("/api/access")) return NextResponse.next();
+  if (pathname.startsWith("/login")) return NextResponse.next();
+  if (pathname.startsWith("/signup")) return NextResponse.next();
 
   const needsGate = isProtectedPath(pathname);
   if (!needsGate) return NextResponse.next();

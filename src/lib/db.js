@@ -1,4 +1,5 @@
 import { createClient } from "@libsql/client";
+import crypto from "crypto";
 import fs from "fs";
 import path from "path";
 
@@ -182,6 +183,16 @@ const initPromise = (async () => {
 
   if (!(await hasColumn("users", "image"))) {
     await db.execute("ALTER TABLE users ADD COLUMN image TEXT");
+  }
+  if (!(await hasColumn("users", "password_hash"))) {
+    try {
+      await db.execute("ALTER TABLE users ADD COLUMN password_hash TEXT");
+    } catch (error) {
+      const message = error?.message || "";
+      if (!message.includes("duplicate column name")) {
+        throw error;
+      }
+    }
   }
 
   const regionCount = await db.execute(
@@ -550,6 +561,33 @@ export async function findDuplicateBean(data) {
     ],
   });
   return result.rows[0] || null;
+}
+
+export async function getUserByEmail(email) {
+  await ensureInit();
+  const result = await db.execute({
+    sql: `
+      SELECT id, email, name, image, password_hash
+      FROM users
+      WHERE LOWER(email) = LOWER(?)
+      LIMIT 1
+    `,
+    args: [email],
+  });
+  return result.rows[0] || null;
+}
+
+export async function createCredentialsUser({ email, name, passwordHash }) {
+  await ensureInit();
+  const id = crypto.randomUUID();
+  await db.execute({
+    sql: `
+      INSERT INTO users (id, email, name, password_hash)
+      VALUES (?, ?, ?, ?)
+    `,
+    args: [id, email, name || null, passwordHash],
+  });
+  return { id, email, name: name || null };
 }
 
 export async function getTables() {

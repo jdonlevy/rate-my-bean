@@ -19,7 +19,7 @@ export default async function NewBeanPage() {
       ) : (
         <div className="card">
           <p className="muted">Sign in to add a blend.</p>
-          <a className="button" href="/api/auth/signin">
+          <a className="button" href="/login">
             Sign in
           </a>
         </div>
