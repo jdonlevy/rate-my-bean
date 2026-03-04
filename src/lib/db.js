@@ -185,7 +185,14 @@ const initPromise = (async () => {
     await db.execute("ALTER TABLE users ADD COLUMN image TEXT");
   }
   if (!(await hasColumn("users", "password_hash"))) {
-    await db.execute("ALTER TABLE users ADD COLUMN password_hash TEXT");
+    try {
+      await db.execute("ALTER TABLE users ADD COLUMN password_hash TEXT");
+    } catch (error) {
+      const message = error?.message || "";
+      if (!message.includes("duplicate column name")) {
+        throw error;
+      }
+    }
   }
 
   const regionCount = await db.execute(
