@@ -341,6 +341,11 @@ a {
   box-shadow: 0 0 0 6px rgba(21, 107, 59, 0.2);
 }
 
+.map-pin--active span {
+  background: #f3b247;
+  box-shadow: 0 0 0 8px rgba(243, 178, 71, 0.28);
+}
+
 .leaflet-container {
   font-family: inherit;
 }

@@ -4,8 +4,15 @@ import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import { MapContainer, Marker, Popup, TileLayer, useMapEvents } from "react-leaflet";
 
-const pinIcon = L.divIcon({
+const baseIcon = L.divIcon({
   className: "map-pin",
+  html: "<span></span>",
+  iconSize: [18, 18],
+  iconAnchor: [9, 9],
+});
+
+const activeIcon = L.divIcon({
+  className: "map-pin map-pin--active",
   html: "<span></span>",
   iconSize: [18, 18],
   iconAnchor: [9, 9],
@@ -22,7 +29,15 @@ function BoundsWatcher({ onBounds }) {
   return null;
 }
 
-export default function BeanFinderMap({ center, onMapReady, onBounds, roasteries, onRoasteryClick }) {
+export default function BeanFinderMap({
+  center,
+  onMapReady,
+  onBounds,
+  roasteries,
+  onRoasteryClick,
+  hoveredId,
+  onRoasteryHover,
+}) {
   return (
     <MapContainer
       center={center}
@@ -42,9 +57,11 @@ export default function BeanFinderMap({ center, onMapReady, onBounds, roasteries
         <Marker
           key={roastery.id}
           position={[roastery.latitude, roastery.longitude]}
-          icon={pinIcon}
+          icon={roastery.id === hoveredId ? activeIcon : baseIcon}
           eventHandlers={{
             click: () => onRoasteryClick(roastery.id),
+            mouseover: () => onRoasteryHover?.(roastery.id),
+            mouseout: () => onRoasteryHover?.(null),
           }}
         >
           <Popup>

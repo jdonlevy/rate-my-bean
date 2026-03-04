@@ -13,6 +13,7 @@ export default function BeanFinder() {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState([]);
   const [mapRef, setMapRef] = useState(null);
+  const [hoveredId, setHoveredId] = useState(null);
 
   const center = useMemo(() => [20, 0], []);
 
@@ -72,6 +73,7 @@ export default function BeanFinder() {
     setResults(data || []);
     if (data?.[0]) {
       mapRef.setView([Number(data[0].lat), Number(data[0].lon)], 12);
+      setTimeout(() => fetchRoasteries(mapRef.getBounds()), 600);
     }
   }
 
@@ -117,6 +119,7 @@ export default function BeanFinder() {
                     if (!mapRef) return;
                     mapRef.setView([Number(result.lat), Number(result.lon)], 12);
                     setResults([]);
+                    setTimeout(() => fetchRoasteries(mapRef.getBounds()), 600);
                   }}
                 >
                   {result.display_name}
@@ -136,6 +139,8 @@ export default function BeanFinder() {
                     <button
                       type="button"
                       onClick={() => router.push(`/roasters/${roastery.id}`)}
+                      onMouseEnter={() => setHoveredId(roastery.id)}
+                      onMouseLeave={() => setHoveredId(null)}
                     >
                       <span>{roastery.name}</span>
                       <span className="muted">
@@ -158,6 +163,8 @@ export default function BeanFinder() {
           onBounds={fetchRoasteries}
           roasteries={roasteries}
           onRoasteryClick={(id) => router.push(`/roasters/${id}`)}
+          hoveredId={hoveredId}
+          onRoasteryHover={setHoveredId}
         />
       </div>
     </section>
