@@ -156,9 +156,6 @@ const initPromise = (async () => {
       sql: "CREATE INDEX IF NOT EXISTS idx_beans_origin ON beans (origin_country, origin_region);",
     },
     {
-      sql: "CREATE INDEX IF NOT EXISTS idx_beans_roastery ON beans (roastery_id);",
-    },
-    {
       sql: "CREATE INDEX IF NOT EXISTS idx_roasteries_location ON roasteries (latitude, longitude);",
     },
     {
@@ -221,6 +218,17 @@ const initPromise = (async () => {
       if (!message.includes("duplicate column name")) {
         throw error;
       }
+    }
+  }
+
+  try {
+    await db.execute(
+      "CREATE INDEX IF NOT EXISTS idx_beans_roastery ON beans (roastery_id);"
+    );
+  } catch (error) {
+    const message = error?.message || "";
+    if (!message.includes("no such column")) {
+      throw error;
     }
   }
 
@@ -671,13 +679,21 @@ export async function getBeanFieldSuggestions() {
       ORDER BY count DESC, region ASC
     `,
   });
-  const roasteries = await db.execute({
-    sql: `
-      SELECT id, name, city, region, country
-      FROM roasteries
-      ORDER BY name ASC
-    `,
-  });
+  let roasteries = { rows: [] };
+  try {
+    roasteries = await db.execute({
+      sql: `
+        SELECT id, name, city, region, country
+        FROM roasteries
+        ORDER BY name ASC
+      `,
+    });
+  } catch (error) {
+    const message = error?.message || "";
+    if (!message.includes("no such table")) {
+      throw error;
+    }
+  }
 
   return {
     beans: rows.rows,
@@ -686,7 +702,7 @@ export async function getBeanFieldSuggestions() {
     originCountries: unique(rows.rows.map((row) => row.origin_country)),
     originRegions: unique(rows.rows.map((row) => row.origin_region)),
     countryRegions: countryRegions.rows,
-    roasteries: roasteries.rows,
+    roasteries: roasteries.rows || [],
   };
 }
 

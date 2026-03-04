@@ -1,27 +1,10 @@
 "use client";
 
-import { MapContainer, Marker, Popup, TileLayer, useMapEvents } from "react-leaflet";
+import dynamic from "next/dynamic";
 import { useEffect, useMemo, useState } from "react";
-import L from "leaflet";
 import { useRouter } from "next/navigation";
 
-const pinIcon = L.divIcon({
-  className: "map-pin",
-  html: "<span></span>",
-  iconSize: [18, 18],
-  iconAnchor: [9, 9],
-});
-
-function BoundsWatcher({ onBounds }) {
-  useMapEvents({
-    moveend: (event) => {
-      const map = event.target;
-      const bounds = map.getBounds();
-      onBounds(bounds);
-    },
-  });
-  return null;
-}
+const BeanFinderMap = dynamic(() => import("./BeanFinderMap"), { ssr: false });
 
 export default function BeanFinder() {
   const router = useRouter();
@@ -79,9 +62,17 @@ export default function BeanFinder() {
 
   async function handleSearchSubmit(event) {
     event.preventDefault();
-    if (!query || !results?.length || !mapRef) return;
-    const first = results[0];
-    mapRef.setView([Number(first.lat), Number(first.lon)], 12);
+    if (!query || !mapRef) return;
+    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
+      query
+    )}&limit=5`;
+    const res = await fetch(url, { headers: { "Accept-Language": "en" } });
+    if (!res.ok) return;
+    const data = await res.json();
+    setResults(data || []);
+    if (data?.[0]) {
+      mapRef.setView([Number(data[0].lat), Number(data[0].lon)], 12);
+    }
   }
 
   function handleUseLocation() {
@@ -161,39 +152,13 @@ export default function BeanFinder() {
         </div>
       </div>
       <div className="finder-map">
-        <MapContainer
+        <BeanFinderMap
           center={center}
-          zoom={2}
-          minZoom={2}
-          scrollWheelZoom
-          className="leaflet-map"
-          style={{ height: "100%", width: "100%" }}
-          whenCreated={setMapRef}
-        >
-          <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          />
-          <BoundsWatcher onBounds={fetchRoasteries} />
-          {roasteries.map((roastery) => (
-            <Marker
-              key={roastery.id}
-              position={[roastery.latitude, roastery.longitude]}
-              icon={pinIcon}
-              eventHandlers={{
-                click: () => router.push(`/roasters/${roastery.id}`),
-              }}
-            >
-              <Popup>
-                <strong>{roastery.name}</strong>
-                <br />
-                {[roastery.city, roastery.region, roastery.country]
-                  .filter(Boolean)
-                  .join(" · ")}
-              </Popup>
-            </Marker>
-          ))}
-        </MapContainer>
+          onMapReady={setMapRef}
+          onBounds={fetchRoasteries}
+          roasteries={roasteries}
+          onRoasteryClick={(id) => router.push(`/roasters/${id}`)}
+        />
       </div>
     </section>
   );
