@@ -1,13 +1,15 @@
 "use client";
 
 import { signIn } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-export default function AuthLogin({ disabled }) {
+export default function AuthLogin({ disabled, showGoogle = true }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
   async function handleCredentials(event) {
     event.preventDefault();
@@ -17,29 +19,33 @@ export default function AuthLogin({ disabled }) {
     const res = await signIn("credentials", {
       email,
       password,
-      redirect: true,
+      redirect: false,
       callbackUrl: "/",
     });
     if (res?.error) {
       setError("Invalid email or password.");
+      setLoading(false);
+      return;
     }
-    setLoading(false);
+    router.push(res?.url || "/");
   }
 
   return (
     <div className="auth-grid">
-      <div className="card auth-card">
-        <h3>Sign in with Google</h3>
-        <p className="muted">Use your Google account.</p>
-        <button
-          className="button"
-          type="button"
-          onClick={() => !disabled && signIn("google")}
-          disabled={disabled}
-        >
-          Continue with Google
-        </button>
-      </div>
+      {showGoogle ? (
+        <div className="card auth-card">
+          <h3>Sign in with Google</h3>
+          <p className="muted">Use your Google account.</p>
+          <button
+            className="button"
+            type="button"
+            onClick={() => !disabled && signIn("google")}
+            disabled={disabled}
+          >
+            Continue with Google
+          </button>
+        </div>
+      ) : null}
 
       <div className="card auth-card">
         <h3>Sign in with email</h3>
@@ -71,6 +77,9 @@ export default function AuthLogin({ disabled }) {
           <button className="button" type="submit" disabled={disabled || loading}>
             {loading ? "Signing in..." : "Sign in"}
           </button>
+          <p className="muted">
+            Need an account? <a className="link" href="/signup">Create one</a>.
+          </p>
         </form>
       </div>
     </div>
