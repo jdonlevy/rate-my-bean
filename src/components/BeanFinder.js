@@ -41,6 +41,23 @@ export default function BeanFinder() {
     return () => window.removeEventListener("resize", handleResize);
   }, [mapRef]);
 
+  useEffect(() => {
+    if (!query) {
+      setResults([]);
+      return;
+    }
+    const handle = setTimeout(async () => {
+      const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
+        query
+      )}&limit=5`;
+      const res = await fetch(url, { headers: { "Accept-Language": "en" } });
+      if (!res.ok) return;
+      const data = await res.json();
+      setResults(data || []);
+    }, 350);
+    return () => clearTimeout(handle);
+  }, [query]);
+
   async function fetchRoasteries(bounds) {
     if (!bounds) return;
     setLoading(true);
@@ -62,17 +79,9 @@ export default function BeanFinder() {
 
   async function handleSearchSubmit(event) {
     event.preventDefault();
-    if (!query) return;
-    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
-      query
-    )}&limit=5`;
-    const res = await fetch(url, { headers: { "Accept-Language": "en" } });
-    if (!res.ok) return;
-    const data = await res.json();
-    setResults(data || []);
-    if (data?.[0] && mapRef) {
-      mapRef.setView([Number(data[0].lat), Number(data[0].lon)], 12);
-    }
+    if (!query || !results?.length || !mapRef) return;
+    const first = results[0];
+    mapRef.setView([Number(first.lat), Number(first.lon)], 12);
   }
 
   function handleUseLocation() {
@@ -158,6 +167,7 @@ export default function BeanFinder() {
           minZoom={2}
           scrollWheelZoom
           className="leaflet-map"
+          style={{ height: "100%", width: "100%" }}
           whenCreated={setMapRef}
         >
           <TileLayer
