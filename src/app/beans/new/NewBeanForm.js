@@ -335,6 +335,7 @@ export default function NewBeanForm({ suggestions }) {
   const [form, setForm] = useState(initialState);
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
+  const [autoFilling, setAutoFilling] = useState(false);
   const router = useRouter();
   const countryRegions = suggestions?.countryRegions || [];
 
@@ -407,6 +408,41 @@ export default function NewBeanForm({ suggestions }) {
     }));
   }
 
+  async function handleBagImageChange(event) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setAutoFilling(true);
+    setError("");
+    try {
+      const formData = new FormData();
+      formData.append("bagImage", file);
+      const res = await fetch("/api/beans/ocr", {
+        method: "POST",
+        body: formData,
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data?.error || "Failed to read the photo.");
+      }
+      const data = await res.json();
+      setForm((prev) => ({
+        ...prev,
+        name: data.blendName || prev.name,
+        roaster: data.roasterName || prev.roaster,
+        roasterUrl: data.roasterUrl || prev.roasterUrl,
+        originCountry: data.originCountry || prev.originCountry,
+        originRegion: data.originRegion || prev.originRegion,
+        roastLevel: data.roastLevel || prev.roastLevel,
+        process: data.process || prev.process,
+      }));
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setAutoFilling(false);
+    }
+  }
+
   async function handleSubmit(event) {
     event.preventDefault();
     setError("");
@@ -432,6 +468,21 @@ export default function NewBeanForm({ suggestions }) {
       }
       if (normalizedRegion && !allowedRegions.has(normalizedRegion)) {
         setError("Select a valid origin region from the list.");
+        setSaving(false);
+        return;
+      }
+      if (!form.roaster.trim()) {
+        setError("Roaster name is required.");
+        setSaving(false);
+        return;
+      }
+      if (!form.roasterUrl.trim()) {
+        setError("Roaster website is required.");
+        setSaving(false);
+        return;
+      }
+      if (!form.roastLevel) {
+        setError("Roast level is required.");
         setSaving(false);
         return;
       }
@@ -466,6 +517,20 @@ export default function NewBeanForm({ suggestions }) {
 
   return (
     <form className="form" onSubmit={handleSubmit}>
+      <div className="form-row">
+        <label htmlFor="bagImage">Coffee bag photo *</label>
+        <input
+          id="bagImage"
+          name="bagImage"
+          type="file"
+          accept="image/jpeg,image/png,image/heic,image/heif"
+          capture="environment"
+          required
+          onChange={handleBagImageChange}
+        />
+        {autoFilling ? <p className="hint">Reading the label…</p> : null}
+      </div>
+
       <SearchSelect
         id="originCountry"
         name="originCountry"
@@ -501,11 +566,12 @@ export default function NewBeanForm({ suggestions }) {
       <SearchSelect
         id="originRegion"
         name="originRegion"
-        label="Origin region"
+        label="Origin region *"
         value={form.originRegion}
         onChange={updateField}
         options={regionOptions}
         allowCustom={false}
+        required
         placeholder={
           form.originCountry ? "Select a region" : "Select a country first"
         }
@@ -519,10 +585,11 @@ export default function NewBeanForm({ suggestions }) {
       <SearchSelect
         id="roaster"
         name="roaster"
-        label="Roaster"
+        label="Roaster *"
         value={form.roaster}
         onChange={updateField}
         options={suggestions?.roasters || []}
+        required
         placeholder="Start typing a roaster"
       />
       {fuzzyMatches.roasterMatch ? (
@@ -532,13 +599,14 @@ export default function NewBeanForm({ suggestions }) {
       ) : null}
 
       <div className="form-row">
-        <label htmlFor="roasterUrl">Roaster website (optional)</label>
+        <label htmlFor="roasterUrl">Roaster website *</label>
         <input
           id="roasterUrl"
           name="roasterUrl"
           value={form.roasterUrl}
           onChange={updateField}
           placeholder="https://roaster.com"
+          required
         />
       </div>
 
@@ -618,7 +686,7 @@ export default function NewBeanForm({ suggestions }) {
 
       <div className="form-row">
         <label htmlFor="roastLevel">
-          Roast level
+          Roast level *
           <span
             className="tooltip"
             title="How dark the beans were roasted (e.g., light, medium, dark)."
@@ -631,6 +699,7 @@ export default function NewBeanForm({ suggestions }) {
           name="roastLevel"
           value={form.roastLevel}
           onChange={updateField}
+          required
         >
           <option value="">Select a roast</option>
           <option value="Light">Light</option>
@@ -687,17 +756,6 @@ export default function NewBeanForm({ suggestions }) {
             />
           </div>
         </div>
-      </div>
-
-      <div className="form-row">
-        <label htmlFor="bagImage">Coffee bag photo (optional)</label>
-        <input
-          id="bagImage"
-          name="bagImage"
-          type="file"
-          accept="image/jpeg,image/png,image/heic,image/heif"
-          capture="environment"
-        />
       </div>
 
       <div className="form-row">

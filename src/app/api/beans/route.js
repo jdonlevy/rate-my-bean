@@ -54,6 +54,30 @@ export async function POST(request) {
       { status: 400 }
     );
   }
+  if (!originRegion) {
+    return Response.json(
+      { error: "originRegion is required" },
+      { status: 400 }
+    );
+  }
+  if (!roaster || !roaster.toString().trim()) {
+    return Response.json(
+      { error: "roaster is required" },
+      { status: 400 }
+    );
+  }
+  if (!roastLevel || !roastLevel.toString().trim()) {
+    return Response.json(
+      { error: "roastLevel is required" },
+      { status: 400 }
+    );
+  }
+  if (!bagImage || typeof bagImage === "string") {
+    return Response.json(
+      { error: "bagImage is required" },
+      { status: 400 }
+    );
+  }
 
   const validLocation = await isValidCountryRegion(
     originCountry.toString(),
@@ -166,6 +190,12 @@ export async function POST(request) {
     }
   } catch (error) {
     return Response.json({ error: error.message }, { status: 400 });
+  }
+  if (!roasterUrl) {
+    return Response.json(
+      { error: "roasterUrl is required" },
+      { status: 400 }
+    );
   }
 
   const scoreValue =

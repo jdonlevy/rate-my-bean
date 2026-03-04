@@ -1,6 +1,8 @@
 import NextAuth from "next-auth";
+import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
-import { upsertUser } from "@/lib/db";
+import bcrypt from "bcryptjs";
+import { getUserByEmail, upsertUser } from "@/lib/db";
 
 const isPreview = process.env.VERCEL_ENV === "preview";
 
@@ -21,7 +23,33 @@ if (isPreview) {
   signOut = async () => null;
 } else {
   ({ handlers, auth, signIn, signOut } = NextAuth({
-    providers: [Google],
+    providers: [
+      Google,
+      Credentials({
+        name: "Rate My Bean",
+        credentials: {
+          email: { label: "Email", type: "email" },
+          password: { label: "Password", type: "password" },
+        },
+        async authorize(credentials) {
+          const email = credentials?.email?.toString().trim();
+          const password = credentials?.password?.toString();
+          if (!email || !password) return null;
+
+          const user = await getUserByEmail(email);
+          if (!user?.password_hash) return null;
+
+          const valid = await bcrypt.compare(password, user.password_hash);
+          if (!valid) return null;
+
+          return {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+          };
+        },
+      }),
+    ],
     session: { strategy: "jwt" },
     trustHost: true,
     callbacks: {

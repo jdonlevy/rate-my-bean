@@ -47,7 +47,7 @@ export default async function RootLayout({ children }) {
                   <a href="/api/auth/signout">Sign out</a>
                 </>
               ) : (
-                <a href="/api/auth/signin">Sign in</a>
+                <a href="/login">Sign in</a>
               )}
             </div>
           </div>
