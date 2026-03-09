@@ -7,6 +7,7 @@ export default function AuthSignup({ disabled }) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -14,6 +15,10 @@ export default function AuthSignup({ disabled }) {
     event.preventDefault();
     if (disabled) return;
     setError("");
+    if (password !== confirmPassword) {
+      setError("Passwords do not match.");
+      return;
+    }
     setLoading(true);
     try {
       const res = await fetch("/api/auth/signup", {
@@ -69,6 +74,18 @@ export default function AuthSignup({ disabled }) {
             type="password"
             value={password}
             onChange={(event) => setPassword(event.target.value)}
+            minLength={8}
+            required
+            disabled={disabled}
+          />
+        </div>
+        <div className="form-row">
+          <label htmlFor="confirmPassword">Confirm password</label>
+          <input
+            id="confirmPassword"
+            type="password"
+            value={confirmPassword}
+            onChange={(event) => setConfirmPassword(event.target.value)}
             minLength={8}
             required
             disabled={disabled}

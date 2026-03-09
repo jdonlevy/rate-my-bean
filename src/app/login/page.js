@@ -9,10 +9,7 @@ export default function LoginPage() {
       <p className="muted">
         Use Google or your Rate My Bean account to continue.
       </p>
-      {isPreview ? (
-        <p className="muted">Login is disabled in preview.</p>
-      ) : null}
-      <AuthLogin disabled={isPreview} />
+      <AuthLogin disabled={false} showGoogle={!isPreview} />
       <p className="muted">
         No account yet? <a className="link" href="/signup">Create one</a>.
       </p>

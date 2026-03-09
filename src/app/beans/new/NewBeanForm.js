@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
 const initialState = {
@@ -13,6 +13,7 @@ const initialState = {
   process: "",
   roastLevel: "",
   roasterUrl: "",
+  roasteryId: "",
   ratingScore: "",
   ratingNotes: "",
   ratingPricePaid: "",
@@ -331,13 +332,23 @@ function SearchSelect({
   );
 }
 
-export default function NewBeanForm({ suggestions }) {
+export default function NewBeanForm({ suggestions, initialRoasteryId = "" }) {
   const [form, setForm] = useState(initialState);
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
   const [autoFilling, setAutoFilling] = useState(false);
   const router = useRouter();
   const countryRegions = suggestions?.countryRegions || [];
+  const roasteries = suggestions?.roasteries || [];
+
+  useEffect(() => {
+    if (initialRoasteryId) {
+      setForm((prev) => ({
+        ...prev,
+        roasteryId: String(initialRoasteryId),
+      }));
+    }
+  }, [initialRoasteryId]);
 
   const fuzzyMatches = useMemo(() => {
     const names = suggestions?.names || [];
@@ -426,6 +437,11 @@ export default function NewBeanForm({ suggestions }) {
         throw new Error(data?.error || "Failed to read the photo.");
       }
       const data = await res.json();
+      const roasteryMatch = data.roasterName
+        ? roasteries.find((roastery) =>
+            normalize(roastery.name).includes(normalize(data.roasterName))
+          )
+        : null;
       setForm((prev) => ({
         ...prev,
         name: data.blendName || prev.name,
@@ -435,6 +451,7 @@ export default function NewBeanForm({ suggestions }) {
         originRegion: data.originRegion || prev.originRegion,
         roastLevel: data.roastLevel || prev.roastLevel,
         process: data.process || prev.process,
+        roasteryId: roasteryMatch ? String(roasteryMatch.id) : prev.roasteryId,
       }));
     } catch (err) {
       setError(err.message);
@@ -483,6 +500,11 @@ export default function NewBeanForm({ suggestions }) {
       }
       if (!form.roastLevel) {
         setError("Roast level is required.");
+        setSaving(false);
+        return;
+      }
+      if (!form.roasteryId) {
+        setError("Roastery is required.");
         setSaving(false);
         return;
       }
@@ -561,6 +583,26 @@ export default function NewBeanForm({ suggestions }) {
           onChange={updateField}
           placeholder="Your name"
         />
+      </div>
+
+      <div className="form-row">
+        <label htmlFor="roasteryId">Roastery *</label>
+        <select
+          id="roasteryId"
+          name="roasteryId"
+          value={form.roasteryId}
+          onChange={updateField}
+          required
+        >
+          <option value="">Select a roastery</option>
+          {roasteries.map((roastery) => (
+            <option key={roastery.id} value={roastery.id}>
+              {roastery.name}
+              {roastery.city ? ` · ${roastery.city}` : ""}
+              {roastery.country ? ` · ${roastery.country}` : ""}
+            </option>
+          ))}
+        </select>
       </div>
 
       <SearchSelect
