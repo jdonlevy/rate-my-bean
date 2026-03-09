@@ -466,6 +466,61 @@ export async function upsertRoasteries(roasteries) {
   return ids.rows;
 }
 
+export async function createRoastery(data) {
+  await ensureInit();
+  const externalId = data.externalId || data.external_id;
+  if (!externalId) {
+    throw new Error("externalId is required");
+  }
+  await db.execute({
+    sql: `
+      INSERT INTO roasteries (
+        name,
+        website,
+        address,
+        city,
+        region,
+        country,
+        latitude,
+        longitude,
+        source,
+        external_id
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `,
+    args: [
+      data.name,
+      data.website || null,
+      data.address || null,
+      data.city || null,
+      data.region || null,
+      data.country || null,
+      data.latitude,
+      data.longitude,
+      data.source,
+      externalId,
+    ],
+  });
+  const result = await db.execute({
+    sql: `
+      SELECT
+        id,
+        name,
+        website,
+        address,
+        city,
+        region,
+        country,
+        latitude,
+        longitude
+      FROM roasteries
+      WHERE source = ? AND external_id = ?
+      LIMIT 1
+    `,
+    args: [data.source, externalId],
+  });
+  return result.rows[0] || null;
+}
+
 export async function getRoasteriesByBounds({ south, west, north, east }) {
   await ensureInit();
   const result = await db.execute({

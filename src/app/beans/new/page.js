@@ -4,7 +4,9 @@ import NewBeanForm from "./NewBeanForm";
 
 export default async function NewBeanPage({ searchParams }) {
   const session = await auth();
-  const suggestions = await getBeanFieldSuggestions();
+  const suggestions = JSON.parse(
+    JSON.stringify(await getBeanFieldSuggestions())
+  );
   const isPreview = process.env.VERCEL_ENV === "preview";
   const initialRoasteryId = searchParams?.roasteryId || "";
 

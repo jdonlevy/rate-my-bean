@@ -5,6 +5,11 @@ const ACCESS_COOKIE = "rmb_access";
 function isProtectedPath(pathname) {
   if (pathname.startsWith("/api/auth")) return false;
   if (pathname.startsWith("/api/access")) return false;
+  if (process.env.NODE_ENV === "development") {
+    if (pathname.startsWith("/api/roasteries/search")) return false;
+    if (pathname.startsWith("/api/roasteries/import")) return false;
+    if (pathname.startsWith("/api/roasteries/nominatim")) return false;
+  }
   if (pathname.startsWith("/access")) return false;
   if (pathname.startsWith("/login")) return false;
   if (pathname.startsWith("/signup")) return false;

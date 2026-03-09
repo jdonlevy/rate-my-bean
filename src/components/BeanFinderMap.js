@@ -2,7 +2,8 @@
 
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
-import { MapContainer, Marker, Popup, TileLayer, useMapEvents } from "react-leaflet";
+import { useEffect, useRef } from "react";
+import { MapContainer, Marker, Popup, TileLayer, useMap, useMapEvents } from "react-leaflet";
 
 const baseIcon = L.divIcon({
   className: "map-pin",
@@ -23,9 +24,21 @@ function BoundsWatcher({ onBounds }) {
     moveend: (event) => {
       const map = event.target;
       const bounds = map.getBounds();
-      onBounds(bounds);
+      onBounds(bounds, map.getZoom());
     },
   });
+  return null;
+}
+
+function MapReady({ onMapReady, onBounds }) {
+  const map = useMap();
+  const didInit = useRef(false);
+  useEffect(() => {
+    if (didInit.current) return;
+    didInit.current = true;
+    onMapReady?.(map);
+    onBounds?.(map.getBounds(), map.getZoom());
+  }, [map, onBounds, onMapReady]);
   return null;
 }
 
@@ -46,13 +59,13 @@ export default function BeanFinderMap({
       scrollWheelZoom
       className="leaflet-map"
       style={{ height: "100%", width: "100%" }}
-      whenCreated={onMapReady}
     >
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
       <BoundsWatcher onBounds={onBounds} />
+      <MapReady onMapReady={onMapReady} onBounds={onBounds} />
       {roasteries.map((roastery) => (
         <Marker
           key={roastery.id}
