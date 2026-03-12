@@ -2,7 +2,7 @@
 
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { MapContainer, Marker, Popup, TileLayer, useMap, useMapEvents } from "react-leaflet";
 
 const baseIcon = L.divIcon({
@@ -42,6 +42,25 @@ function MapReady({ onMapReady, onBounds }) {
   return null;
 }
 
+function hashSeed(value) {
+  const str = String(value ?? "");
+  let hash = 0;
+  for (let i = 0; i < str.length; i += 1) {
+    hash = (hash << 5) - hash + str.charCodeAt(i);
+    hash |= 0;
+  }
+  return hash;
+}
+
+function jitterCoord(lat, lon, seed) {
+  const hash = hashSeed(seed);
+  const rand1 = Math.sin(hash) * 10000;
+  const rand2 = Math.cos(hash) * 10000;
+  const offsetLat = ((rand1 % 1) - 0.5) * 0.03;
+  const offsetLon = ((rand2 % 1) - 0.5) * 0.03;
+  return [lat + offsetLat, lon + offsetLon];
+}
+
 export default function BeanFinderMap({
   center,
   onMapReady,
@@ -51,6 +70,14 @@ export default function BeanFinderMap({
   hoveredId,
   onRoasteryHover,
 }) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) return null;
+
   return (
     <MapContainer
       center={center}
@@ -69,7 +96,11 @@ export default function BeanFinderMap({
       {roasteries.map((roastery) => (
         <Marker
           key={roastery.id}
-          position={[roastery.latitude, roastery.longitude]}
+          position={jitterCoord(
+            roastery.latitude,
+            roastery.longitude,
+            `${roastery.id}:${roastery.address || roastery.name}`
+          )}
           icon={roastery.id === hoveredId ? activeIcon : baseIcon}
           eventHandlers={{
             click: () => onRoasteryClick(roastery.id),

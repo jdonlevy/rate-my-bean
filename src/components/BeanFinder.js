@@ -29,13 +29,12 @@ export default function BeanFinder() {
   const [addSuccess, setAddSuccess] = useState("");
   const [mapRef, setMapRef] = useState(null);
   const [hoveredId, setHoveredId] = useState(null);
-  const [status, setStatus] = useState("Zoom in to load roasteries.");
+  const [status, setStatus] = useState("Search for a location to load seeded roasteries.");
   const inFlight = useRef(false);
   const lastBoundsKey = useRef("");
   const lastBoundsAt = useRef(0);
   const debounceTimer = useRef(null);
   const suppressBoundsUntil = useRef(0);
-  const nominatimInFlight = useRef(false);
 
   const center = useMemo(() => [20, 0], []);
 
@@ -54,140 +53,6 @@ export default function BeanFinder() {
       east: lon + lonDelta,
     };
   };
-
-  const buildNominatimRoasteries = (items) => {
-    return (items || [])
-      .map((item) => {
-        const latitude = parseNumber(item.lat);
-        const longitude = parseNumber(item.lon);
-        if (latitude == null || longitude == null) return null;
-        const address = item.address || {};
-        return {
-          name: item.name || item.display_name?.split(",")?.[0] || "Unknown roastery",
-          website: item.extratags?.website || "",
-          address: item.display_name || "",
-          city: address.city || address.town || address.village || "",
-          region: address.state || address.county || "",
-          country: address.country || "",
-          latitude,
-          longitude,
-          source: "nominatim",
-          externalId: `${item.osm_type}/${item.osm_id}`,
-        };
-      })
-      .filter(Boolean);
-  };
-
-  const fetchNominatimFallback = useCallback(async ({ bounds }) => {
-    if (nominatimInFlight.current) return [];
-    nominatimInFlight.current = true;
-    try {
-      const controller = new AbortController();
-      const timer = setTimeout(() => controller.abort(), 6000);
-      const res = await fetch(
-        `/api/roasteries/nominatim?south=${bounds.south}&west=${bounds.west}&north=${bounds.north}&east=${bounds.east}`,
-        { signal: controller.signal }
-      );
-      clearTimeout(timer);
-      if (!res.ok) return [];
-      const payload = await res.json();
-      const roasteries = buildNominatimRoasteries(payload.results);
-      if (roasteries.length) {
-        await fetch("/api/roasteries/import", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ roasteries }),
-        });
-      }
-      return roasteries;
-    } finally {
-      nominatimInFlight.current = false;
-    }
-  }, []);
-
-  const buildOverpassQuery = ({ bounds, lat, lon, radius }) => {
-    if (lat != null && lon != null) {
-      return `
-        [out:json][timeout:60];
-        (
-          nwr["craft"="coffee_roaster"](around:${radius},${lat},${lon});
-          nwr["shop"="coffee"](around:${radius},${lat},${lon});
-          nwr["shop"="coffee"]["roaster"="yes"](around:${radius},${lat},${lon});
-          nwr["amenity"="cafe"]["roaster"="yes"](around:${radius},${lat},${lon});
-          nwr["amenity"="cafe"](around:${radius},${lat},${lon});
-          nwr["industrial"="coffee"](around:${radius},${lat},${lon});
-          nwr["man_made"="works"]["product"~"coffee",i](around:${radius},${lat},${lon});
-          nwr["name"~"roast|roastery|roaster|coffee|cafe",i](around:${radius},${lat},${lon});
-        );
-        out center tags;
-      `;
-    }
-    return `
-      [out:json][timeout:60];
-      (
-        nwr["craft"="coffee_roaster"](${bounds.south},${bounds.west},${bounds.north},${bounds.east});
-        nwr["shop"="coffee"](${bounds.south},${bounds.west},${bounds.north},${bounds.east});
-        nwr["shop"="coffee"]["roaster"="yes"](${bounds.south},${bounds.west},${bounds.north},${bounds.east});
-        nwr["amenity"="cafe"]["roaster"="yes"](${bounds.south},${bounds.west},${bounds.north},${bounds.east});
-        nwr["amenity"="cafe"](${bounds.south},${bounds.west},${bounds.north},${bounds.east});
-        nwr["industrial"="coffee"](${bounds.south},${bounds.west},${bounds.north},${bounds.east});
-        nwr["man_made"="works"]["product"~"coffee",i](${bounds.south},${bounds.west},${bounds.north},${bounds.east});
-        nwr["name"~"roast|roastery|roaster|coffee|cafe",i](${bounds.south},${bounds.west},${bounds.north},${bounds.east});
-      );
-      out center tags;
-    `;
-  };
-
-  const buildOverpassRoasteries = (elements) => {
-    return (elements || [])
-      .map((element) => {
-        const tags = element.tags || {};
-        const coords = element.center || element;
-        const latitude = parseNumber(coords.lat);
-        const longitude = parseNumber(coords.lon);
-        if (latitude == null || longitude == null) return null;
-        return {
-          name: tags.name || "Unknown roastery",
-          website: tags.website || tags["contact:website"] || "",
-          address: tags["addr:full"] || "",
-          city: tags["addr:city"] || "",
-          region: tags["addr:state"] || "",
-          country: tags["addr:country"] || "",
-          latitude,
-          longitude,
-          source: "osm",
-          externalId: `${element.type}/${element.id}`,
-        };
-      })
-      .filter(Boolean);
-  };
-
-  const fetchOverpassClient = useCallback(async ({ bounds, lat, lon, radius }) => {
-    const query = buildOverpassQuery({ bounds, lat, lon, radius });
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 8000);
-    const res = await fetch("https://overpass.kumi.systems/api/interpreter", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-        "User-Agent": "RateMyBean/1.0",
-      },
-      body: `data=${encodeURIComponent(query)}`,
-      signal: controller.signal,
-    });
-    clearTimeout(timer);
-    if (!res.ok) return [];
-    const data = await res.json();
-    const roasteries = buildOverpassRoasteries(data.elements);
-    if (roasteries.length) {
-      await fetch("/api/roasteries/import", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ roasteries }),
-      });
-    }
-    return roasteries;
-  }, []);
 
   useEffect(() => {
     if (!mapRef) return;
@@ -251,24 +116,10 @@ export default function BeanFinder() {
         return;
       }
       const data = await res.json();
-      let next = data.roasteries || [];
-      if (!next.length && data?.error === "fetch failed") {
-        next = await fetchNominatimFallback({
-          bounds: { south, west, north, east },
-        });
-      }
-      if (!next.length && data?.error === "fetch failed") {
-        next = await fetchOverpassClient({
-          bounds: { south, west, north, east },
-        });
-      }
+      const next = data.roasteries || [];
       setRoasteries(next);
       if (!next.length) {
-        setStatus(
-          data?.error === "fetch failed"
-            ? "Roasteries unavailable (network blocked). Try again or add one manually."
-            : "No roasteries found in this area."
-        );
+        setStatus("No seeded roasteries found in this area.");
       }
     } finally {
       lastBoundsKey.current = key;
@@ -286,33 +137,17 @@ export default function BeanFinder() {
     inFlight.current = true;
     try {
       const res = await fetch(
-        `/api/roasteries/search?lat=${lat}&lon=${lon}&radius=25000&debug=1`
+        `/api/roasteries/search?lat=${lat}&lon=${lon}&radius=20000&debug=1`
       );
       if (!res.ok) {
         setStatus("Could not load roasteries.");
         return;
       }
       const data = await res.json();
-      let next = data.roasteries || [];
-      if (!next.length && data?.error === "fetch failed") {
-        next = await fetchNominatimFallback({
-          bounds: boundsFromRadius(lat, lon, 25000),
-        });
-      }
-      if (!next.length && data?.error === "fetch failed") {
-        next = await fetchOverpassClient({
-          lat,
-          lon,
-          radius: 25000,
-        });
-      }
+      const next = data.roasteries || [];
       setRoasteries(next);
       if (!next.length) {
-        setStatus(
-          data?.error === "fetch failed"
-            ? "Roasteries unavailable (network blocked). Try again or add one manually."
-            : "No roasteries found in this area."
-        );
+        setStatus("No seeded roasteries found in this area.");
       }
     } finally {
       setLoading(false);
@@ -439,19 +274,7 @@ export default function BeanFinder() {
     }
   }
 
-  const handleBounds = useCallback(
-    (bounds, zoom) => {
-      if (debounceTimer.current) {
-        clearTimeout(debounceTimer.current);
-      }
-      const suppressUntil = suppressBoundsUntil.current;
-      debounceTimer.current = setTimeout(() => {
-        if (Date.now() < suppressUntil) return;
-        fetchRoasteries(bounds, zoom);
-      }, 700);
-    },
-    [fetchRoasteries]
-  );
+  const handleBounds = useCallback(() => {}, []);
 
   return (
     <section className="finder-hero">
