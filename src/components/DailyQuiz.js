@@ -1,0 +1,166 @@
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
+
+export default function DailyQuiz({ isLoggedIn }) {
+  const [loading, setLoading] = useState(false);
+  const [question, setQuestion] = useState(null);
+  const [answer, setAnswer] = useState(null);
+  const [selectedIndex, setSelectedIndex] = useState(null);
+  const [beanometer, setBeanometer] = useState(null);
+  const [error, setError] = useState("");
+
+  const hasAnswered = Boolean(answer);
+
+  useEffect(() => {
+    if (!isLoggedIn) return;
+    let active = true;
+    setLoading(true);
+    fetch("/api/quiz/daily")
+      .then((res) => (res.ok ? res.json() : Promise.reject(res)))
+      .then((data) => {
+        if (!active) return;
+        setQuestion(data.question);
+        setAnswer(data.answer);
+        setBeanometer(data.beanometer);
+        if (data.answer) {
+          setSelectedIndex(data.answer.selectedIndex);
+        }
+      })
+      .catch(() => {
+        if (!active) return;
+        setError("Could not load today’s quiz.");
+      })
+      .finally(() => {
+        if (!active) return;
+        setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [isLoggedIn]);
+
+  const options = useMemo(() => question?.options || [], [question]);
+  const beanMax = useMemo(() => {
+    const top = beanometer?.leaderboard?.[0]?.beans_count || 0;
+    return Math.max(10, top);
+  }, [beanometer]);
+  const beanPercent = useMemo(() => {
+    const count = beanometer?.beansCount || 0;
+    return Math.min(100, Math.round((count / beanMax) * 100));
+  }, [beanometer, beanMax]);
+
+  async function handleSubmit(event) {
+    event.preventDefault();
+    if (selectedIndex == null || hasAnswered) return;
+    setLoading(true);
+    setError("");
+    try {
+      const res = await fetch("/api/quiz/answer", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ selectedIndex }),
+      });
+      if (!res.ok) {
+        setError("Could not submit your answer.");
+        return;
+      }
+      const data = await res.json();
+      setAnswer(data.answer);
+      setBeanometer(data.beanometer);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  if (!isLoggedIn) return null;
+
+  return (
+    <aside className="beanometer">
+      <div className="card beanometer-card">
+        <span className="pill">Daily Quiz</span>
+        <h3>Today’s coffee fact</h3>
+        {loading && !question ? <p className="muted">Loading quiz…</p> : null}
+        {error ? <p className="error">{error}</p> : null}
+        {question ? (
+          <form className="quiz-form" onSubmit={handleSubmit}>
+            <p className="quiz-question">{question.text}</p>
+            <div className="quiz-options">
+              {options.map((option, index) => (
+                <label
+                  key={option}
+                  className={
+                    selectedIndex === index ? "quiz-option selected" : "quiz-option"
+                  }
+                >
+                  <input
+                    type="radio"
+                    name="quiz-option"
+                    value={index}
+                    checked={selectedIndex === index}
+                    onChange={() => setSelectedIndex(index)}
+                    disabled={hasAnswered}
+                  />
+                  <span>{option}</span>
+                </label>
+              ))}
+            </div>
+            <button className="button" type="submit" disabled={hasAnswered || selectedIndex == null}>
+              {hasAnswered ? "Answered" : "Submit answer"}
+            </button>
+            {hasAnswered ? (
+              <p className={answer.correct ? "success" : "error"}>
+                {answer.correct ? "Correct! +1 bean." : "Not quite. Try again tomorrow."}
+              </p>
+            ) : null}
+            {hasAnswered ? <p className="muted">{question.fact}</p> : null}
+          </form>
+        ) : null}
+      </div>
+      <div className="card beanometer-card">
+        <span className="pill">Beanometer</span>
+        <h3>Your beans</h3>
+        <div className="beanometer-thermo">
+          <div className="thermo-tube">
+            <div
+              className="thermo-fill"
+              style={{ height: `${beanPercent}%` }}
+            >
+              <span className="thermo-count">
+                {beanometer?.beansCount ?? 0}
+              </span>
+            </div>
+          </div>
+          <div className="thermo-meta">
+            <div className="beanometer-count">
+              <span className="bean-count">{beanometer?.beansCount ?? 0}</span>
+              <span className="muted">beans earned</span>
+            </div>
+            <div className="beanometer-rank">
+              <span>Rank</span>
+              <strong>
+                {beanometer?.rank ?? "-"} / {beanometer?.totalUsers ?? "-"}
+              </strong>
+            </div>
+            <p className="muted">Top today: {beanMax} beans</p>
+          </div>
+        </div>
+        <div className="beanometer-leaderboard">
+          <h4>Leaderboard</h4>
+          {beanometer?.leaderboard?.length ? (
+            <ol>
+              {beanometer.leaderboard.map((entry) => (
+                <li key={entry.user_id}>
+                  <span>{entry.label}</span>
+                  <strong>{entry.beans_count}</strong>
+                </li>
+              ))}
+            </ol>
+          ) : (
+            <p className="muted">No scores yet.</p>
+          )}
+        </div>
+      </div>
+    </aside>
+  );
+}

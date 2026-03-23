@@ -1,8 +1,14 @@
 import { auth } from "@/auth";
+import { getBeanFieldSuggestions } from "@/lib/db";
 import NewBeanForm from "./NewBeanForm";
 
-export default async function NewBeanPage() {
+export default async function NewBeanPage({ searchParams }) {
   const session = await auth();
+  const suggestions = JSON.parse(
+    JSON.stringify(await getBeanFieldSuggestions())
+  );
+  const isPreview = process.env.VERCEL_ENV === "preview";
+  const initialRoasteryId = searchParams?.roasteryId || "";
 
   return (
     <section className="hero-card">
@@ -11,12 +17,15 @@ export default async function NewBeanPage() {
         Start with the essentials. You can add more details later.
       </p>
 
-      {session?.user ? (
-        <NewBeanForm />
+      {session?.user || isPreview ? (
+        <NewBeanForm
+          suggestions={suggestions}
+          initialRoasteryId={initialRoasteryId}
+        />
       ) : (
         <div className="card">
-          <p className="muted">Sign in to add a bean.</p>
-          <a className="button" href="/api/auth/signin">
+          <p className="muted">Sign in to add a blend.</p>
+          <a className="button" href="/login">
             Sign in
           </a>
         </div>

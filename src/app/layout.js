@@ -33,17 +33,20 @@ export default async function RootLayout({ children }) {
               </div>
             </div>
             <nav className="nav-links">
-              <a href="/">All Beans</a>
+              <a href="/">Bean Finder</a>
+              <a href="/beans">All Beans</a>
               <a href="/beans/new">Add Bean</a>
             </nav>
             <div className="auth-actions">
-              {session?.user ? (
+              {process.env.VERCEL_ENV === "preview" ? (
+                <span className="muted">Preview mode</span>
+              ) : session?.user ? (
                 <>
                   <span className="muted">{session.user.email}</span>
                   <a href="/api/auth/signout">Sign out</a>
                 </>
               ) : (
-                <a href="/api/auth/signin">Sign in</a>
+                <a href="/login">Sign in</a>
               )}
             </div>
           </div>
