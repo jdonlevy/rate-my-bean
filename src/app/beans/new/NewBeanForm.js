@@ -538,8 +538,14 @@ export default function NewBeanForm({ suggestions, initialRoasteryId = "" }) {
   }
 
   return (
-    <form className="form" onSubmit={handleSubmit}>
-      <div className="form-row">
+    <form className="form bean-form" onSubmit={handleSubmit}>
+      <div className="bean-form-actions">
+        <button className="button" type="submit" disabled={saving}>
+          {saving ? "Saving..." : "Add Bean"}
+        </button>
+      </div>
+      <div className="bean-form-grid">
+        <div className="form-row">
         <label htmlFor="bagImage">Coffee bag photo *</label>
         <input
           id="bagImage"
@@ -551,9 +557,9 @@ export default function NewBeanForm({ suggestions, initialRoasteryId = "" }) {
           onChange={handleBagImageChange}
         />
         {autoFilling ? <p className="hint">Reading the label…</p> : null}
-      </div>
+        </div>
 
-      <SearchSelect
+        <SearchSelect
         id="originCountry"
         name="originCountry"
         label="Origin country *"
@@ -567,14 +573,14 @@ export default function NewBeanForm({ suggestions, initialRoasteryId = "" }) {
         allowCustom={false}
         required
         placeholder="Select a country"
-      />
-      {fuzzyMatches.countryMatch ? (
+        />
+        {fuzzyMatches.countryMatch ? (
         <p className="hint">
           Similar origin country exists: {fuzzyMatches.countryMatch.value}
         </p>
-      ) : null}
+        ) : null}
 
-      <div className="form-row">
+        <div className="form-row">
         <label htmlFor="reviewerName">Reviewer name</label>
         <input
           id="reviewerName"
@@ -583,9 +589,9 @@ export default function NewBeanForm({ suggestions, initialRoasteryId = "" }) {
           onChange={updateField}
           placeholder="Your name"
         />
-      </div>
+        </div>
 
-      <div className="form-row">
+        <div className="form-row">
         <label htmlFor="roasteryId">Roastery *</label>
         <select
           id="roasteryId"
@@ -603,9 +609,9 @@ export default function NewBeanForm({ suggestions, initialRoasteryId = "" }) {
             </option>
           ))}
         </select>
-      </div>
+        </div>
 
-      <SearchSelect
+        <SearchSelect
         id="originRegion"
         name="originRegion"
         label="Origin region *"
@@ -617,14 +623,14 @@ export default function NewBeanForm({ suggestions, initialRoasteryId = "" }) {
         placeholder={
           form.originCountry ? "Select a region" : "Select a country first"
         }
-      />
-      {fuzzyMatches.regionMatch ? (
+        />
+        {fuzzyMatches.regionMatch ? (
         <p className="hint">
           Similar origin region exists: {fuzzyMatches.regionMatch.value}
         </p>
-      ) : null}
+        ) : null}
 
-      <SearchSelect
+        <SearchSelect
         id="roaster"
         name="roaster"
         label="Roaster *"
@@ -633,14 +639,14 @@ export default function NewBeanForm({ suggestions, initialRoasteryId = "" }) {
         options={suggestions?.roasters || []}
         required
         placeholder="Start typing a roaster"
-      />
-      {fuzzyMatches.roasterMatch ? (
+        />
+        {fuzzyMatches.roasterMatch ? (
         <p className="hint">
           Similar roaster exists: {fuzzyMatches.roasterMatch.value}
         </p>
-      ) : null}
+        ) : null}
 
-      <div className="form-row">
+        <div className="form-row">
         <label htmlFor="roasterUrl">Roaster website *</label>
         <input
           id="roasterUrl"
@@ -650,9 +656,9 @@ export default function NewBeanForm({ suggestions, initialRoasteryId = "" }) {
           placeholder="https://roaster.com"
           required
         />
-      </div>
+        </div>
 
-      <SearchSelect
+        <SearchSelect
         id="name"
         name="name"
         label="Blend name *"
@@ -661,12 +667,12 @@ export default function NewBeanForm({ suggestions, initialRoasteryId = "" }) {
         options={suggestions?.names || []}
         required
         placeholder="Start typing a blend name"
-      />
-      {fuzzyMatches.nameMatch ? (
+        />
+        {fuzzyMatches.nameMatch ? (
         <p className="hint">
           Similar name already exists: {fuzzyMatches.nameMatch.value}
         </p>
-      ) : null}
+        ) : null}
 
         {fuzzyMatches.comboMatch ? (
           <div className="card">
@@ -686,7 +692,7 @@ export default function NewBeanForm({ suggestions, initialRoasteryId = "" }) {
             </p>
           </div>
         ) : null}
-      <div className="form-row">
+        <div className="form-row">
         <label htmlFor="blend">Blend?</label>
         <select
           id="blend"
@@ -706,9 +712,9 @@ export default function NewBeanForm({ suggestions, initialRoasteryId = "" }) {
           <option value="false">Single origin</option>
           <option value="true">Blend</option>
         </select>
-      </div>
+        </div>
 
-      <div className="form-row">
+        <div className="form-row">
         <label htmlFor="process">Process</label>
         <select
           id="process"
@@ -724,9 +730,9 @@ export default function NewBeanForm({ suggestions, initialRoasteryId = "" }) {
           <option value="Anaerobic">Anaerobic</option>
           <option value="Carbonic maceration">Carbonic maceration</option>
         </select>
-      </div>
+        </div>
 
-      <div className="form-row">
+        <div className="form-row">
         <label htmlFor="roastLevel">
           Roast level *
           <span
@@ -750,9 +756,9 @@ export default function NewBeanForm({ suggestions, initialRoasteryId = "" }) {
           <option value="Medium-dark">Medium-dark</option>
           <option value="Dark">Dark</option>
         </select>
-      </div>
+        </div>
 
-      <div className="card">
+        <div className="card">
         <h3>Add an initial rating (optional)</h3>
         <div className="form">
           <div className="form-row">
@@ -798,9 +804,9 @@ export default function NewBeanForm({ suggestions, initialRoasteryId = "" }) {
             />
           </div>
         </div>
-      </div>
+        </div>
 
-      <div className="form-row">
+        <div className="form-row">
         <label htmlFor="coffeeImage">Brew photo (optional)</label>
         <input
           id="coffeeImage"
@@ -809,13 +815,10 @@ export default function NewBeanForm({ suggestions, initialRoasteryId = "" }) {
           accept="image/jpeg,image/png,image/heic,image/heif"
           capture="environment"
         />
+        </div>
+
+        {error ? <p className="muted">{error}</p> : null}
       </div>
-
-      {error ? <p className="muted">{error}</p> : null}
-
-      <button className="button" type="submit" disabled={saving}>
-        {saving ? "Saving..." : "Save Bean"}
-      </button>
     </form>
   );
 }

@@ -398,6 +398,25 @@ a {
   max-width: 640px;
 }
 
+.bean-form {
+  max-width: 100%;
+}
+
+.bean-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0 0 8px;
+}
+
+.bean-form-grid {
+  display: grid;
+  gap: 20px;
+  padding: 20px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.82);
+  box-shadow: 0 18px 50px rgba(9, 28, 18, 0.08);
+}
+
 .form-row {
   display: grid;
   gap: 10px;
