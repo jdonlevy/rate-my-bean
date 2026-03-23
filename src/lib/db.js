@@ -59,6 +59,154 @@ const regionSeed = [
   ["Papua New Guinea", "Eastern Highlands"],
 ];
 
+const quizSeed = [
+  {
+    question: "Coffee beans are actually the seeds of which fruit?",
+    options: ["Cherry", "Berry", "Fig", "Olive"],
+    correctIndex: 0,
+    fact: "Coffee beans are the seeds inside a coffee cherry.",
+  },
+  {
+    question: "Which species is generally known for higher caffeine content?",
+    options: ["Arabica", "Robusta", "Liberica", "Excelsa"],
+    correctIndex: 1,
+    fact: "Robusta typically contains more caffeine than Arabica.",
+  },
+  {
+    question: "What does \"single origin\" usually mean?",
+    options: [
+      "Blended from multiple countries",
+      "From one geographic region or farm",
+      "Decaf only",
+      "Roasted dark only",
+    ],
+    correctIndex: 1,
+    fact: "Single origin coffee comes from one region, farm, or cooperative.",
+  },
+  {
+    question: "Which roast level is generally the lightest?",
+    options: ["Light", "Medium", "Medium-dark", "Dark"],
+    correctIndex: 0,
+    fact: "Light roasts are roasted for the least time.",
+  },
+  {
+    question: "Espresso is a brewing method that uses:",
+    options: ["Cold water", "Steam only", "High pressure", "No pressure"],
+    correctIndex: 2,
+    fact: "Espresso is brewed by forcing hot water through coffee under pressure.",
+  },
+  {
+    question: "Which grind size is typical for espresso?",
+    options: ["Coarse", "Medium", "Fine", "Extra coarse"],
+    correctIndex: 2,
+    fact: "Espresso usually uses a fine grind.",
+  },
+  {
+    question: "Which country is the largest coffee producer?",
+    options: ["Colombia", "Ethiopia", "Brazil", "Vietnam"],
+    correctIndex: 2,
+    fact: "Brazil is the world’s largest coffee producer.",
+  },
+  {
+    question: "Which roast generally keeps the most origin character?",
+    options: ["Light", "Medium-dark", "Dark", "French"],
+    correctIndex: 0,
+    fact: "Light roasts preserve more origin flavors.",
+  },
+  {
+    question: "A \"natural\" coffee process means the beans are:",
+    options: [
+      "Washed with lots of water",
+      "Dried inside the fruit",
+      "Frozen before roasting",
+      "Aged in barrels",
+    ],
+    correctIndex: 1,
+    fact: "Natural process coffees dry with the fruit intact.",
+  },
+  {
+    question: "Which roast typically looks the lightest in color?",
+    options: ["Light", "Medium", "Medium-dark", "Dark"],
+    correctIndex: 0,
+    fact: "Light roasts are the palest in color.",
+  },
+  {
+    question: "What does \"cupping\" refer to?",
+    options: [
+      "Grinding coffee",
+      "Tasting coffee for evaluation",
+      "Packaging beans",
+      "Steaming milk",
+    ],
+    correctIndex: 1,
+    fact: "Cupping is a standardized way to taste coffee.",
+  },
+  {
+    question: "Which is a common coffee flavor note category?",
+    options: ["Stone fruit", "Plastic", "Metal", "Soap"],
+    correctIndex: 0,
+    fact: "Stone fruit notes are common in some coffees.",
+  },
+  {
+    question: "What is a \"blend\"?",
+    options: [
+      "Coffee from one farm",
+      "Coffee from multiple origins combined",
+      "Decaf coffee",
+      "Instant coffee",
+    ],
+    correctIndex: 1,
+    fact: "Blends combine coffees from multiple origins.",
+  },
+  {
+    question: "Which is a typical espresso drink?",
+    options: ["Latte", "Filter", "Cold brew", "Turkish"],
+    correctIndex: 0,
+    fact: "Lattes are espresso-based drinks.",
+  },
+  {
+    question: "What does \"washed\" process usually involve?",
+    options: [
+      "Drying coffee in the fruit",
+      "Removing fruit before drying",
+      "Freezing beans",
+      "Adding milk",
+    ],
+    correctIndex: 1,
+    fact: "Washed coffees are depulped before drying.",
+  },
+  {
+    question: "Which tool is commonly used for pour-over brewing?",
+    options: ["AeroPress", "V60", "Moka pot", "Percolator"],
+    correctIndex: 1,
+    fact: "The V60 is a popular pour-over brewer.",
+  },
+  {
+    question: "What does \"body\" refer to in coffee tasting?",
+    options: ["Sweetness", "Mouthfeel", "Acidity", "Aroma"],
+    correctIndex: 1,
+    fact: "Body describes the weight or mouthfeel of coffee.",
+  },
+  {
+    question: "Which term describes sour, bright flavor in coffee?",
+    options: ["Bitterness", "Acidity", "Body", "Aftertaste"],
+    correctIndex: 1,
+    fact: "Acidity gives coffee brightness and sparkle.",
+  },
+  {
+    question: "Which roast level often tastes the most smoky?",
+    options: ["Light", "Medium", "Dark", "Light-medium"],
+    correctIndex: 2,
+    fact: "Dark roasts can taste smoky due to longer roasting.",
+  },
+  {
+    question: "What is a common milk-based espresso drink?",
+    options: ["Americano", "Cappuccino", "Cold brew", "Batch brew"],
+    correctIndex: 1,
+    fact: "Cappuccinos are espresso drinks with steamed milk.",
+  },
+];
+
 async function hasColumn(table, column) {
   const res = await db.execute(`PRAGMA table_info(${table})`);
   return res.rows.some((row) => row.name === column);
@@ -141,6 +289,55 @@ const initPromise = (async () => {
     },
     {
       sql: `
+      CREATE TABLE IF NOT EXISTS quiz_questions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        question TEXT NOT NULL,
+        option_a TEXT NOT NULL,
+        option_b TEXT NOT NULL,
+        option_c TEXT NOT NULL,
+        option_d TEXT NOT NULL,
+        correct_index INTEGER NOT NULL,
+        fact TEXT NOT NULL,
+        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+      );
+    `,
+    },
+    {
+      sql: `
+      CREATE TABLE IF NOT EXISTS daily_quiz (
+        quiz_date TEXT PRIMARY KEY,
+        question_id INTEGER NOT NULL,
+        created_at TEXT NOT NULL DEFAULT (datetime('now')),
+        FOREIGN KEY (question_id) REFERENCES quiz_questions (id)
+      );
+    `,
+    },
+    {
+      sql: `
+      CREATE TABLE IF NOT EXISTS quiz_answers (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id TEXT NOT NULL,
+        quiz_date TEXT NOT NULL,
+        question_id INTEGER NOT NULL,
+        selected_index INTEGER NOT NULL,
+        correct INTEGER NOT NULL DEFAULT 0,
+        created_at TEXT NOT NULL DEFAULT (datetime('now')),
+        UNIQUE (user_id, quiz_date),
+        FOREIGN KEY (question_id) REFERENCES quiz_questions (id)
+      );
+    `,
+    },
+    {
+      sql: `
+      CREATE TABLE IF NOT EXISTS user_beanometer (
+        user_id TEXT PRIMARY KEY,
+        beans_count INTEGER NOT NULL DEFAULT 0,
+        updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+      );
+    `,
+    },
+    {
+      sql: `
       CREATE TABLE IF NOT EXISTS country_regions (
         country TEXT NOT NULL,
         region TEXT NOT NULL,
@@ -160,6 +357,9 @@ const initPromise = (async () => {
     },
     {
       sql: "CREATE INDEX IF NOT EXISTS idx_users_email ON users (email);",
+    },
+    {
+      sql: "CREATE INDEX IF NOT EXISTS idx_quiz_answers_user ON quiz_answers (user_id, quiz_date);",
     },
     {
       sql: "CREATE INDEX IF NOT EXISTS idx_country_regions_country ON country_regions (country);",
@@ -241,6 +441,35 @@ const initPromise = (async () => {
       args: [country, region],
     }));
     await db.batch(batch);
+  }
+
+  const quizCount = await db.execute(
+    "SELECT COUNT(*) AS count FROM quiz_questions"
+  );
+  if (!quizCount.rows[0]?.count) {
+    const quizBatch = quizSeed.map((item) => ({
+      sql: `
+        INSERT INTO quiz_questions (
+          question,
+          option_a,
+          option_b,
+          option_c,
+          option_d,
+          correct_index,
+          fact
+        ) VALUES (?, ?, ?, ?, ?, ?, ?)
+      `,
+      args: [
+        item.question,
+        item.options[0],
+        item.options[1],
+        item.options[2],
+        item.options[3],
+        item.correctIndex,
+        item.fact,
+      ],
+    }));
+    await db.batch(quizBatch);
   }
 })();
 
@@ -712,6 +941,150 @@ export async function getStats() {
     beanCount: beanCountRes.rows[0]?.count || 0,
     ratingCount: ratingRes.rows[0]?.count || 0,
     avgScore: ratingRes.rows[0]?.avg_score || 0,
+  };
+}
+
+function todayKey() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+export async function getOrCreateDailyQuiz(dateKey = todayKey()) {
+  await ensureInit();
+  const existing = await db.execute({
+    sql: `
+      SELECT q.id, q.question, q.option_a, q.option_b, q.option_c, q.option_d, q.correct_index, q.fact
+      FROM daily_quiz d
+      JOIN quiz_questions q ON q.id = d.question_id
+      WHERE d.quiz_date = ?
+      LIMIT 1
+    `,
+    args: [dateKey],
+  });
+  if (existing.rows[0]) {
+    return { dateKey, question: existing.rows[0] };
+  }
+
+  const pick = await db.execute({
+    sql: "SELECT id FROM quiz_questions ORDER BY RANDOM() LIMIT 1",
+  });
+  const questionId = pick.rows[0]?.id;
+  if (!questionId) {
+    return { dateKey, question: null };
+  }
+
+  await db.execute({
+    sql: `
+      INSERT OR IGNORE INTO daily_quiz (quiz_date, question_id)
+      VALUES (?, ?)
+    `,
+    args: [dateKey, questionId],
+  });
+
+  const question = await db.execute({
+    sql: `
+      SELECT id, question, option_a, option_b, option_c, option_d, correct_index, fact
+      FROM quiz_questions
+      WHERE id = ?
+      LIMIT 1
+    `,
+    args: [questionId],
+  });
+  return { dateKey, question: question.rows[0] || null };
+}
+
+export async function getUserQuizAnswer(userId, dateKey = todayKey()) {
+  await ensureInit();
+  const result = await db.execute({
+    sql: `
+      SELECT selected_index, correct
+      FROM quiz_answers
+      WHERE user_id = ? AND quiz_date = ?
+      LIMIT 1
+    `,
+    args: [userId, dateKey],
+  });
+  return result.rows[0] || null;
+}
+
+export async function submitDailyQuizAnswer(userId, selectedIndex, dateKey = todayKey()) {
+  await ensureInit();
+  const existing = await getUserQuizAnswer(userId, dateKey);
+  if (existing) {
+    return { alreadyAnswered: true, ...existing };
+  }
+
+  const quiz = await getOrCreateDailyQuiz(dateKey);
+  const question = quiz.question;
+  if (!question) {
+    return { error: "No quiz available" };
+  }
+  const correct = Number(selectedIndex) === Number(question.correct_index) ? 1 : 0;
+
+  await db.execute({
+    sql: `
+      INSERT INTO quiz_answers (
+        user_id,
+        quiz_date,
+        question_id,
+        selected_index,
+        correct
+      ) VALUES (?, ?, ?, ?, ?)
+    `,
+    args: [userId, dateKey, question.id, selectedIndex, correct],
+  });
+
+  if (correct) {
+    await db.execute({
+      sql: `
+        INSERT INTO user_beanometer (user_id, beans_count)
+        VALUES (?, 1)
+        ON CONFLICT(user_id)
+        DO UPDATE SET beans_count = beans_count + 1, updated_at = datetime('now')
+      `,
+      args: [userId],
+    });
+  }
+
+  return { correct: Boolean(correct), selectedIndex };
+}
+
+export async function getBeanometerStats(userId) {
+  await ensureInit();
+  const user = await db.execute({
+    sql: "SELECT beans_count FROM user_beanometer WHERE user_id = ?",
+    args: [userId],
+  });
+  const beansCount = user.rows[0]?.beans_count || 0;
+
+  const leaderboard = await db.execute({
+    sql: `
+      SELECT ub.user_id,
+             ub.beans_count,
+             COALESCE(u.name, u.email, 'Anonymous') AS label
+      FROM user_beanometer ub
+      LEFT JOIN users u ON u.id = ub.user_id
+      ORDER BY ub.beans_count DESC, label ASC
+      LIMIT 10
+    `,
+  });
+
+  const better = await db.execute({
+    sql: `
+      SELECT COUNT(*) AS better
+      FROM user_beanometer
+      WHERE beans_count > ?
+    `,
+    args: [beansCount],
+  });
+  const total = await db.execute({
+    sql: "SELECT COUNT(*) AS count FROM user_beanometer",
+  });
+
+  return {
+    beansCount,
+    rank: (better.rows[0]?.better || 0) + 1,
+    totalUsers: total.rows[0]?.count || 0,
+    leaderboard: leaderboard.rows || [],
   };
 }
 

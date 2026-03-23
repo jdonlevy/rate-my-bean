@@ -5,6 +5,8 @@ import { createClient } from "@libsql/client";
 const CSV_PATH = process.argv[2] || path.join("scripts", "roaster_postcodes.csv");
 const DATABASE_URL = process.env.DATABASE_URL || "file:./data/rate-my-bean.db";
 const DATABASE_AUTH_TOKEN = process.env.DATABASE_AUTH_TOKEN;
+const FORCE_ALL = process.argv.includes("--all");
+const MAX_ROWS = Number(process.env.GEOCODE_LIMIT || 0);
 
 function parseCsv(text) {
   const lines = text
@@ -32,6 +34,45 @@ async function geocodePostcodes(postcodes) {
   }
   const data = await response.json();
   return data.result || [];
+}
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function buildNominatimQuery(row) {
+  const parts = [
+    row.name,
+    row.address,
+    row.city,
+    row.region,
+    row.country || "United Kingdom",
+  ]
+    .map((part) => (part || "").trim())
+    .filter(Boolean);
+  return parts.join(", ");
+}
+
+async function geocodeNominatim(row) {
+  const query = buildNominatimQuery(row);
+  if (!query) return null;
+  const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1&limit=1&q=${encodeURIComponent(
+    query
+  )}`;
+  const res = await fetch(url, {
+    headers: {
+      "User-Agent": "RateMyBean/1.0 (geocode script)",
+      "Accept-Language": "en",
+    },
+  });
+  if (!res.ok) return null;
+  const data = await res.json();
+  const hit = data?.[0];
+  if (!hit) return null;
+  const latitude = Number(hit.lat);
+  const longitude = Number(hit.lon);
+  if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) return null;
+  return { latitude, longitude };
 }
 
 async function main() {
@@ -72,51 +113,129 @@ async function main() {
     rows = parseCsv(csv);
   }
 
+  let addressRows = [];
   if (!rows.length) {
     const result = await db.execute({
-      sql: "SELECT name, address FROM roasteries",
+      sql: "SELECT name, address, city, region, country FROM roasteries",
     });
-    const postcodeRegex = /\b[A-Z]{1,2}\d{1,2}[A-Z]?\s*\d[A-Z]{2}\b/i;
-    rows = (result.rows || [])
-      .map((row) => {
-        const address = row.address || "";
-        const match = address.match(postcodeRegex);
-        if (!match) return null;
-        return { name: row.name, postcode: match[0].toUpperCase() };
-      })
-      .filter(Boolean);
+    addressRows = (result.rows || []).map((row) => ({
+      name: row.name,
+      address: row.address || "",
+      city: row.city || "",
+      region: row.region || "",
+      country: row.country || "",
+    }));
   }
 
-  if (!rows.length) {
-    console.error("No rows found in CSV or DB addresses.");
+  if (!rows.length && !addressRows.length) {
+    console.error("No rows found in CSV or DB.");
     process.exit(1);
   }
 
   const batchSize = 100;
   let updated = 0;
-  for (let i = 0; i < rows.length; i += batchSize) {
-    const batch = rows.slice(i, i + batchSize);
-    const postcodes = batch.map((row) => row.postcode);
-    const results = await geocodePostcodes(postcodes);
-    for (let j = 0; j < batch.length; j += 1) {
-      const { name, postcode } = batch[j];
-      const result = results[j];
-      if (!result || result.result === null) {
-        console.warn(`No geocode result for ${name} (${postcode})`);
-        continue;
+  let postcodesFailed = false;
+  if (rows.length) {
+    try {
+      for (let i = 0; i < rows.length; i += batchSize) {
+        const batch = rows.slice(i, i + batchSize);
+        const postcodes = batch.map((row) => row.postcode);
+        const results = await geocodePostcodes(postcodes);
+        for (let j = 0; j < batch.length; j += 1) {
+          const { name, postcode } = batch[j];
+          const result = results[j];
+          if (!result || result.result === null) {
+            console.warn(`No geocode result for ${name} (${postcode})`);
+            continue;
+          }
+          const latitude = result.result.latitude;
+          const longitude = result.result.longitude;
+          await db.execute({
+            sql: `
+              UPDATE roasteries
+              SET latitude = ?, longitude = ?
+              WHERE LOWER(name) = LOWER(?)
+            `,
+            args: [latitude, longitude, name],
+          });
+          updated += 1;
+        }
       }
-      const latitude = result.result.latitude;
-      const longitude = result.result.longitude;
+    } catch (error) {
+      postcodesFailed = true;
+      console.warn(`postcodes.io failed, falling back to Nominatim: ${error.message}`);
+    }
+  } else {
+    postcodesFailed = true;
+  }
+
+  if (postcodesFailed && addressRows.length) {
+    for (const row of addressRows) {
+      const result = await geocodeNominatim(row);
+      if (!result) {
+        console.warn(`No Nominatim result for ${row.name}`);
+      } else {
+        await db.execute({
+          sql: `
+            UPDATE roasteries
+            SET latitude = ?, longitude = ?
+            WHERE LOWER(name) = LOWER(?)
+          `,
+          args: [result.latitude, result.longitude, row.name],
+        });
+        updated += 1;
+      }
+      await sleep(1100);
+    }
+  }
+
+  const fallbackQuery = FORCE_ALL
+    ? `
+        SELECT name, address, city, region, country
+        FROM roasteries
+        ORDER BY name ASC
+      `
+    : `
+        SELECT name, address, city, region, country
+        FROM roasteries
+        WHERE latitude IS NULL OR longitude IS NULL
+        ORDER BY name ASC
+      `;
+
+  const missing = await db.execute({ sql: fallbackQuery });
+  let missingRows = (missing.rows || []).map((row) => ({
+    name: row.name,
+    address: row.address || "",
+    city: row.city || "",
+    region: row.region || "",
+    country: row.country || "",
+  }));
+  if (MAX_ROWS > 0) {
+    missingRows = missingRows.slice(0, MAX_ROWS);
+  }
+
+  if (missingRows.length) {
+    console.log(
+      `Geocoding ${missingRows.length} ${FORCE_ALL ? "entries" : "missing entries"} with Nominatim...`
+    );
+  }
+
+  for (const row of missingRows) {
+    const result = await geocodeNominatim(row);
+    if (!result) {
+      console.warn(`No Nominatim result for ${row.name}`);
+    } else {
       await db.execute({
         sql: `
           UPDATE roasteries
           SET latitude = ?, longitude = ?
           WHERE LOWER(name) = LOWER(?)
         `,
-        args: [latitude, longitude, name],
+        args: [result.latitude, result.longitude, row.name],
       });
       updated += 1;
     }
+    await sleep(1100);
   }
 
   console.log(`Updated ${updated} roasteries`);
