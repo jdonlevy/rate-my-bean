@@ -23,6 +23,7 @@
 
 # local db
 /data/
+dev.db
 
 # misc
 .DS_Store
