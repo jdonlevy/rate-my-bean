@@ -72,9 +72,10 @@ export default function DailyQuiz({ isLoggedIn }) {
           return;
         }
         const data = await res.json();
-        setAnswer({ selectedIndex, correct: Boolean(data.correct) });
+        const isCorrect = Boolean(data.correct);
+        setAnswer({ selectedIndex, correct: isCorrect });
         setPracticeFact(data.fact || "");
-        const message = data.correct
+        const message = isCorrect
           ? "Good beaning, no beans added to your beanometer as this is just a practice question, have a beany day."
           : "Zero beans for you.";
         setAnnouncement(message);
@@ -96,9 +97,10 @@ export default function DailyQuiz({ isLoggedIn }) {
           return;
         }
         const data = await res.json();
+        const isCorrect = Boolean(data.answer?.correct);
         setAnswer(data.answer);
         setBeanometer(data.beanometer);
-        const message = data.answer?.correct
+        const message = isCorrect
           ? "Good beaning, one bean added to your beanometer, have a beany day."
           : "Zero beans for you.";
         setAnnouncement(message);
