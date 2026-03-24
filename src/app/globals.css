@@ -198,6 +198,34 @@ a {
   margin-top: 6px;
 }
 
+.announcement-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 31, 22, 0.55);
+  display: grid;
+  place-items: center;
+  z-index: 40;
+  padding: 24px;
+}
+
+.announcement-card {
+  background: rgba(255, 255, 255, 0.96);
+  border-radius: var(--radius-2);
+  padding: 28px;
+  box-shadow: var(--shadow);
+  max-width: 520px;
+  text-align: center;
+  display: grid;
+  gap: 16px;
+}
+
+.announcement-card p {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text);
+  line-height: 1.4;
+}
+
 .quiz-question {
   font-weight: 600;
   color: var(--text);

@@ -11,6 +11,7 @@ export default function DailyQuiz({ isLoggedIn }) {
   const [error, setError] = useState("");
   const [practiceMode, setPracticeMode] = useState(false);
   const [practiceFact, setPracticeFact] = useState("");
+  const [announcement, setAnnouncement] = useState("");
 
   const hasAnswered = Boolean(answer);
 
@@ -73,12 +74,12 @@ export default function DailyQuiz({ isLoggedIn }) {
         const data = await res.json();
         setAnswer({ selectedIndex, correct: Boolean(data.correct) });
         setPracticeFact(data.fact || "");
+        const message = data.correct
+          ? "Good beaning, no beans added to your beanometer as this is just a practice question, have a beany day."
+          : "Zero beans for you.";
+        setAnnouncement(message);
         if (typeof window !== "undefined" && "speechSynthesis" in window) {
-          const utterance = new SpeechSynthesisUtterance(
-            data.correct
-              ? "Good beaning, no beans added to your beanometer as this is just a practice question, have a beany day."
-              : "Zero beans for you."
-          );
+          const utterance = new SpeechSynthesisUtterance(message);
           utterance.rate = 0.95;
           utterance.pitch = 1.05;
           window.speechSynthesis.cancel();
@@ -97,12 +98,12 @@ export default function DailyQuiz({ isLoggedIn }) {
         const data = await res.json();
         setAnswer(data.answer);
         setBeanometer(data.beanometer);
+        const message = data.answer?.correct
+          ? "Good beaning, one bean added to your beanometer, have a beany day."
+          : "Zero beans for you.";
+        setAnnouncement(message);
         if (typeof window !== "undefined" && "speechSynthesis" in window) {
-          const utterance = new SpeechSynthesisUtterance(
-            data.answer?.correct
-              ? "Good beaning, one bean added to your beanometer, have a beany day."
-              : "Zero beans for you."
-          );
+          const utterance = new SpeechSynthesisUtterance(message);
           utterance.rate = 0.95;
           utterance.pitch = 1.05;
           window.speechSynthesis.cancel();
@@ -138,7 +139,22 @@ export default function DailyQuiz({ isLoggedIn }) {
   if (!isLoggedIn) return null;
 
   return (
-    <aside className="beanometer">
+    <>
+      {announcement ? (
+        <div className="announcement-overlay" role="status" aria-live="polite">
+          <div className="announcement-card">
+            <p>{announcement}</p>
+            <button
+              className="button secondary"
+              type="button"
+              onClick={() => setAnnouncement("")}
+            >
+              Dismiss
+            </button>
+          </div>
+        </div>
+      ) : null}
+      <aside className="beanometer">
       <div className="card beanometer-card">
         <span className="pill">Daily Quiz</span>
         <h3>Today’s coffee fact</h3>
@@ -235,5 +251,6 @@ export default function DailyQuiz({ isLoggedIn }) {
         </div>
       </div>
     </aside>
+    </>
   );
 }
