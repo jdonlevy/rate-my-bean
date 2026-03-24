@@ -1,14 +1,20 @@
 :root {
-  --bg: #eef6f1;
-  --bg-2: #d8ece0;
-  --ink: #0b2014;
-  --muted: #3c5c48;
-  --card: rgba(255, 255, 255, 0.82);
-  --accent: #156b3b;
-  --accent-2: #0c2f1c;
-  --ring: rgba(21, 107, 59, 0.22);
-  --shadow: 0 30px 80px rgba(9, 28, 18, 0.16);
-  --surface: rgba(255, 255, 255, 0.7);
+  --bg: #f2f5f1;
+  --bg-2: #e3efe6;
+  --ink: #0f1f16;
+  --text: #0f1f16;
+  --muted: #496251;
+  --card: rgba(255, 255, 255, 0.92);
+  --surface: rgba(255, 255, 255, 0.75);
+  --accent: #1f6f43;
+  --accent-2: #0f3a24;
+  --ring: rgba(31, 111, 67, 0.18);
+  --border: rgba(15, 31, 22, 0.12);
+  --radius-1: 12px;
+  --radius-2: 20px;
+  --radius-3: 28px;
+  --shadow: 0 24px 60px rgba(12, 30, 20, 0.14);
+  --shadow-soft: 0 12px 32px rgba(12, 30, 20, 0.12);
 }
 
 * {
@@ -26,9 +32,9 @@ body {
 body {
   color: var(--ink);
   background:
-    radial-gradient(1200px 800px at 15% -10%, #ffffff 0%, transparent 65%),
-    radial-gradient(1000px 700px at 90% 10%, #e6f5eb 0%, transparent 60%),
-    linear-gradient(160deg, var(--bg), var(--bg-2));
+    radial-gradient(1200px 800px at 10% -10%, rgba(255, 255, 255, 0.9) 0%, transparent 70%),
+    radial-gradient(1000px 700px at 90% 10%, rgba(232, 243, 236, 0.9) 0%, transparent 65%),
+    linear-gradient(160deg, #f5f6f2 0%, #e7efe8 45%, #eef2ed 100%);
   font-family: var(--font-geist-sans), "IBM Plex Serif", "Georgia", serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -40,7 +46,7 @@ a {
 }
 
 .container {
-  width: min(1100px, 92vw);
+  width: min(1200px, 94vw);
   margin: 0 auto;
 }
 
@@ -48,16 +54,16 @@ a {
   position: sticky;
   top: 0;
   z-index: 20;
-  background: rgba(238, 246, 241, 0.86);
+  background: var(--surface);
   backdrop-filter: blur(12px);
-  border-bottom: none;
+  border-bottom: 1px solid var(--border);
 }
 
 .header-inner {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 20px 0;
+  padding: 22px 0;
   gap: 16px;
 }
 
@@ -87,7 +93,7 @@ a {
 
 .nav-links {
   display: flex;
-  gap: 16px;
+  gap: 12px;
   font-size: 14px;
 }
 
@@ -100,39 +106,40 @@ a {
 
 .auth-actions a {
   padding: 8px 12px;
-  border-radius: 999px;
-  border: none;
+  border-radius: var(--radius-1);
+  border: 1px solid transparent;
   transition: 0.2s ease;
   background: var(--surface);
 }
 
 .auth-actions a:hover {
-  border-color: rgba(11, 32, 20, 0.2);
+  border-color: var(--border);
+  background: rgba(255, 255, 255, 0.9);
 }
 
 .nav-links a {
   padding: 8px 12px;
-  border-radius: 999px;
+  border-radius: var(--radius-1);
   border: 1px solid transparent;
   transition: 0.2s ease;
 }
 
 .nav-links a:hover {
-  border-color: transparent;
-  background: var(--surface);
+  border-color: var(--border);
+  background: rgba(255, 255, 255, 0.9);
 }
 
 .page-shell {
-  padding: 64px 0 96px;
+  padding: 40px 0 64px;
   display: flex;
   flex-direction: column;
-  gap: 32px;
+  gap: 24px;
 }
 
 .page-shell > section {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 12px;
 }
 
 .site-footer {
@@ -149,37 +156,32 @@ a {
 .home::before {
   content: "";
   position: absolute;
-  inset: -60px -40px -40px;
+  inset: -120px -80px -80px;
   z-index: -1;
-  border-radius: 28px;
+  border-radius: var(--radius-3);
   background:
-    url("/coffee-beans.svg") 0 0 / 220px 220px repeat,
-    radial-gradient(180px 180px at 15% 20%, rgba(186, 92, 42, 0.08), transparent 65%),
-    radial-gradient(220px 220px at 85% 10%, rgba(47, 28, 18, 0.08), transparent 65%),
-    radial-gradient(240px 240px at 50% 85%, rgba(212, 122, 70, 0.1), transparent 70%);
-  box-shadow: inset 0 0 0 1px rgba(11, 32, 20, 0.06);
+    radial-gradient(220px 220px at 12% 18%, rgba(140, 90, 55, 0.08), transparent 65%),
+    radial-gradient(260px 260px at 88% 12%, rgba(46, 31, 22, 0.06), transparent 70%),
+    radial-gradient(320px 320px at 50% 88%, rgba(180, 120, 75, 0.08), transparent 72%);
+  box-shadow: inset 0 0 0 1px rgba(11, 32, 20, 0.04);
   opacity: 0.55;
-}
-
-.home-layout {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(260px, 320px);
-  gap: 28px;
-  align-items: start;
 }
 
 .home-main {
   display: flex;
   flex-direction: column;
-  gap: 32px;
+  gap: 20px;
+}
+
+.quiz-section {
+  margin: 12px 0 18px;
 }
 
 .beanometer {
-  position: sticky;
-  top: 96px;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
+  position: static;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 18px;
 }
 
 .beanometer-card {
@@ -190,6 +192,10 @@ a {
   display: flex;
   flex-direction: column;
   gap: 12px;
+}
+
+.quiz-form .button + .button.secondary {
+  margin-top: 6px;
 }
 
 .quiz-question {
@@ -292,7 +298,7 @@ a {
 .beanometer-leaderboard ol {
   list-style: none;
   display: grid;
-  gap: 8px;
+  gap: 6px;
   padding: 0;
   margin: 0;
 }
@@ -300,7 +306,7 @@ a {
 .beanometer-leaderboard li {
   display: flex;
   justify-content: space-between;
-  padding: 8px 10px;
+  padding: 6px 10px;
   border-radius: 12px;
   background: rgba(255, 255, 255, 0.9);
   border: 1px solid rgba(11, 32, 20, 0.08);
@@ -315,9 +321,9 @@ a {
 
 .hero-card {
   background: var(--card);
-  border-radius: 28px;
-  padding: 36px;
-  box-shadow: var(--shadow);
+  border-radius: var(--radius-3);
+  padding: 26px;
+  box-shadow: var(--shadow-soft);
   border: none;
   backdrop-filter: blur(10px);
 }
@@ -347,20 +353,21 @@ a {
   letter-spacing: 0.08em;
   position: relative;
   overflow: hidden;
+  width: fit-content;
 }
 
 .grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 32px;
+  gap: 18px;
 }
 
 .card {
   background: var(--card);
-  border-radius: 24px;
-  padding: 24px;
+  border-radius: var(--radius-2);
+  padding: 20px;
   border: none;
-  box-shadow: 0 18px 50px rgba(9, 28, 18, 0.14);
+  box-shadow: var(--shadow-soft);
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -375,6 +382,19 @@ a {
 .card h3 {
   font-size: 18px;
   letter-spacing: -0.02em;
+}
+
+.split-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.split-header h2,
+.split-header h3 {
+  margin: 0;
 }
 
 .card p {
@@ -394,7 +414,7 @@ a {
 
 .form {
   display: grid;
-  gap: 16px;
+  gap: 14px;
   max-width: 640px;
 }
 
@@ -405,16 +425,16 @@ a {
 .bean-form-actions {
   display: flex;
   justify-content: flex-end;
-  padding: 0 0 8px;
+  padding: 0 0 12px;
 }
 
 .bean-form-grid {
   display: grid;
   gap: 20px;
-  padding: 20px;
-  border-radius: 20px;
+  padding: 24px;
+  border-radius: var(--radius-2);
   background: rgba(255, 255, 255, 0.82);
-  box-shadow: 0 18px 50px rgba(9, 28, 18, 0.08);
+  box-shadow: var(--shadow-soft);
 }
 
 .form-row {
@@ -523,10 +543,10 @@ a {
   position: relative;
   display: grid;
   grid-template-columns: minmax(320px, 420px) minmax(0, 1fr);
-  gap: 24px;
+  gap: 18px;
   align-items: stretch;
-  min-height: 640px;
-  margin-bottom: 32px;
+  min-height: 560px;
+  margin-bottom: 20px;
 }
 
 .finder-overlay {
@@ -535,17 +555,17 @@ a {
 }
 
 .finder-card {
-  background: rgba(255, 255, 255, 0.94);
-  border-radius: 28px;
-  padding: 32px;
-  box-shadow: 0 26px 70px rgba(9, 28, 18, 0.22);
+  background: var(--card);
+  border-radius: var(--radius-3);
+  padding: 22px;
+  box-shadow: var(--shadow);
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
 }
 
 .finder-card h1 {
-  font-size: 40px;
+  font-size: 34px;
   letter-spacing: -0.03em;
 }
 
@@ -565,8 +585,8 @@ a {
 .finder-results {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  max-height: 180px;
+  gap: 6px;
+  max-height: 150px;
   overflow: auto;
 }
 
@@ -585,21 +605,50 @@ a {
 }
 
 .finder-map {
-  height: 640px;
-  border-radius: 30px;
+  height: 560px;
+  border-radius: var(--radius-3);
   overflow: hidden;
-  box-shadow: 0 30px 80px rgba(9, 28, 18, 0.28);
-  background: rgba(255, 255, 255, 0.88);
+  box-shadow: var(--shadow);
+  background: var(--card);
   padding: 0;
 }
 
 .finder-map .leaflet-map {
-  border-radius: 30px;
+  border-radius: var(--radius-2);
   height: 100%;
 }
 
+.map-shell {
+  height: 100%;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.map-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.map-header h2 {
+  font-size: 22px;
+  letter-spacing: -0.02em;
+}
+
+.map-frame {
+  flex: 1;
+  border-radius: var(--radius-2);
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: inset 0 0 0 1px rgba(11, 32, 20, 0.04);
+}
+
 .finder-list {
-  border-top: 1px solid rgba(11, 32, 20, 0.08);
+  border-top: 1px solid var(--border);
   padding-top: 12px;
   display: flex;
   flex-direction: column;
@@ -617,12 +666,21 @@ a {
   width: 100%;
   text-align: left;
   background: rgba(255, 255, 255, 0.9);
-  border: 1px solid rgba(11, 32, 20, 0.08);
-  border-radius: 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-1);
   padding: 10px 12px;
   display: flex;
   flex-direction: column;
   gap: 4px;
+}
+
+.quiz-section {
+  margin: 18px 0 22px;
+  padding: 0;
+}
+
+.quiz-section .beanometer {
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
 }
 
 .finder-add {
@@ -671,6 +729,13 @@ a {
   margin-top: 12px;
 }
 
+.section-divider {
+  height: 1px;
+  background: var(--border);
+  border-radius: 999px;
+  margin: 10px 0 6px;
+}
+
 .cta-row {
   display: flex;
   flex-wrap: wrap;
@@ -678,12 +743,8 @@ a {
 }
 
 @media (max-width: 900px) {
-  .home-layout {
-    grid-template-columns: 1fr;
-  }
-
   .beanometer {
-    position: static;
+    grid-template-columns: 1fr;
   }
 
   .finder-hero {
@@ -910,16 +971,16 @@ a {
 
 .button {
   align-self: flex-start;
-  padding: 12px 18px;
-  border-radius: 999px;
+  padding: 12px 20px;
+  border-radius: var(--radius-1);
   background: var(--accent);
   color: white;
   border: none;
   font-weight: 600;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.01em;
   cursor: pointer;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
-  box-shadow: 0 12px 24px rgba(31, 111, 67, 0.22);
+  box-shadow: 0 10px 24px rgba(31, 111, 67, 0.2);
 }
 
 .button:hover {
@@ -927,7 +988,7 @@ a {
 }
 
 .button.secondary {
-  background: rgba(21, 107, 59, 0.18);
+  background: rgba(31, 111, 67, 0.12);
   color: var(--accent-2);
   box-shadow: none;
 }

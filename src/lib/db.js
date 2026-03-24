@@ -992,6 +992,33 @@ export async function getOrCreateDailyQuiz(dateKey = todayKey()) {
   return { dateKey, question: question.rows[0] || null };
 }
 
+export async function getRandomQuizQuestion() {
+  await ensureInit();
+  const result = await db.execute({
+    sql: `
+      SELECT id, question, option_a, option_b, option_c, option_d, correct_index, fact
+      FROM quiz_questions
+      ORDER BY RANDOM()
+      LIMIT 1
+    `,
+  });
+  return result.rows[0] || null;
+}
+
+export async function getQuizQuestionById(id) {
+  await ensureInit();
+  const result = await db.execute({
+    sql: `
+      SELECT id, question, option_a, option_b, option_c, option_d, correct_index, fact
+      FROM quiz_questions
+      WHERE id = ?
+      LIMIT 1
+    `,
+    args: [id],
+  });
+  return result.rows[0] || null;
+}
+
 export async function getUserQuizAnswer(userId, dateKey = todayKey()) {
   await ensureInit();
   const result = await db.execute({

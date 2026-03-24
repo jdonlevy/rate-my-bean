@@ -20,29 +20,31 @@ export default async function RoasteryPage({ params }) {
 
   return (
     <section className="hero-card">
-      <span className="pill">Roastery</span>
-      <h1>{roastery.name}</h1>
-      <p className="muted">
-        {[roastery.city, roastery.region, roastery.country]
-          .filter(Boolean)
-          .join(" · ")}
-      </p>
-      {roastery.website ? (
-        <a className="link" href={roastery.website} target="_blank" rel="noreferrer">
-          Visit roastery website
+      <div className="split-header">
+        <div>
+          <span className="pill">Roastery</span>
+          <h1>{roastery.name}</h1>
+          <p className="muted">
+            {[roastery.city, roastery.region, roastery.country]
+              .filter(Boolean)
+              .join(" · ")}
+          </p>
+          {roastery.address ? <p className="muted">{roastery.address}</p> : null}
+          {roastery.website ? (
+            <a className="link" href={roastery.website} target="_blank" rel="noreferrer">
+              Visit roastery website
+            </a>
+          ) : null}
+        </div>
+        <a className="button" href={`/beans/new?roasteryId=${roastery.id}`}>
+          Add a bean
         </a>
-      ) : null}
-      {roastery.address ? <p className="muted">{roastery.address}</p> : null}
+      </div>
 
       <div className="section-divider" role="presentation" />
 
       <div className="card">
-        <div className="split-header">
-          <h2>Beans at this roastery</h2>
-          <a className="button" href={`/beans/new?roasteryId=${roastery.id}`}>
-            Add a bean
-          </a>
-        </div>
+        <h2>Beans at this roastery</h2>
         {beans.length === 0 ? (
           <p className="muted">No beans yet. Add the first one.</p>
         ) : (

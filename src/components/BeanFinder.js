@@ -463,15 +463,26 @@ export default function BeanFinder() {
         </div>
       </div>
       <div className="finder-map">
-        <BeanFinderMap
-          center={center}
-          onMapReady={setMapRef}
-          onBounds={handleBounds}
-          roasteries={roasteries}
-          onRoasteryClick={(id) => router.push(`/roasters/${id}`)}
-          hoveredId={hoveredId}
-          onRoasteryHover={setHoveredId}
-        />
+        <div className="map-shell">
+          <div className="map-header">
+            <div>
+              <span className="pill">Explore</span>
+              <h2>Global Roastery Map</h2>
+              <p className="muted">Pan and zoom to explore seeded roasteries.</p>
+            </div>
+          </div>
+          <div className="map-frame">
+            <BeanFinderMap
+              center={center}
+              onMapReady={setMapRef}
+              onBounds={handleBounds}
+              roasteries={roasteries}
+              onRoasteryClick={(id) => router.push(`/roasters/${id}`)}
+              hoveredId={hoveredId}
+              onRoasteryHover={setHoveredId}
+            />
+          </div>
+        </div>
       </div>
     </section>
   );

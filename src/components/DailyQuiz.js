@@ -9,6 +9,8 @@ export default function DailyQuiz({ isLoggedIn }) {
   const [selectedIndex, setSelectedIndex] = useState(null);
   const [beanometer, setBeanometer] = useState(null);
   const [error, setError] = useState("");
+  const [practiceMode, setPracticeMode] = useState(false);
+  const [practiceFact, setPracticeFact] = useState("");
 
   const hasAnswered = Boolean(answer);
 
@@ -23,6 +25,8 @@ export default function DailyQuiz({ isLoggedIn }) {
         setQuestion(data.question);
         setAnswer(data.answer);
         setBeanometer(data.beanometer);
+        setPracticeMode(false);
+        setPracticeFact("");
         if (data.answer) {
           setSelectedIndex(data.answer.selectedIndex);
         }
@@ -56,18 +60,72 @@ export default function DailyQuiz({ isLoggedIn }) {
     setLoading(true);
     setError("");
     try {
-      const res = await fetch("/api/quiz/answer", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ selectedIndex }),
-      });
+      if (practiceMode) {
+        const res = await fetch("/api/quiz/check", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ questionId: question?.id, selectedIndex }),
+        });
+        if (!res.ok) {
+          setError("Could not submit your answer.");
+          return;
+        }
+        const data = await res.json();
+        setAnswer({ selectedIndex, correct: Boolean(data.correct) });
+        setPracticeFact(data.fact || "");
+        if (data.correct && typeof window !== "undefined" && "speechSynthesis" in window) {
+          const utterance = new SpeechSynthesisUtterance(
+            "Good beaning, no beans added to your beanometer as this is just a practice question, have a beany day."
+          );
+          utterance.rate = 0.95;
+          utterance.pitch = 1.05;
+          window.speechSynthesis.cancel();
+          window.speechSynthesis.speak(utterance);
+        }
+      } else {
+        const res = await fetch("/api/quiz/answer", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ selectedIndex }),
+        });
+        if (!res.ok) {
+          setError("Could not submit your answer.");
+          return;
+        }
+        const data = await res.json();
+        setAnswer(data.answer);
+        setBeanometer(data.beanometer);
+        if (data.answer?.correct && typeof window !== "undefined" && "speechSynthesis" in window) {
+          const utterance = new SpeechSynthesisUtterance(
+            "Good beaning, one bean added to your beanometer, have a beany day."
+          );
+          utterance.rate = 0.95;
+          utterance.pitch = 1.05;
+          window.speechSynthesis.cancel();
+          window.speechSynthesis.speak(utterance);
+        }
+      }
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleNewQuestion() {
+    if (!isLoggedIn) return;
+    setLoading(true);
+    setError("");
+    try {
+      const res = await fetch("/api/quiz/random");
       if (!res.ok) {
-        setError("Could not submit your answer.");
+        setError("Could not load a new question.");
         return;
       }
       const data = await res.json();
-      setAnswer(data.answer);
-      setBeanometer(data.beanometer);
+      setQuestion(data.question);
+      setAnswer(null);
+      setSelectedIndex(null);
+      setPracticeMode(true);
+      setPracticeFact("");
     } finally {
       setLoading(false);
     }
@@ -109,11 +167,22 @@ export default function DailyQuiz({ isLoggedIn }) {
               {hasAnswered ? "Answered" : "Submit answer"}
             </button>
             {hasAnswered ? (
+              <button className="button secondary" type="button" onClick={handleNewQuestion}>
+                New question
+              </button>
+            ) : null}
+            {hasAnswered ? (
               <p className={answer.correct ? "success" : "error"}>
-                {answer.correct ? "Correct! +1 bean." : "Not quite. Try again tomorrow."}
+                {answer.correct
+                  ? practiceMode
+                    ? "Correct! Practice round — no beans added."
+                    : "Good beaning, one bean added to your beanometer, have a beany day."
+                  : "Not quite. Try again tomorrow."}
               </p>
             ) : null}
-            {hasAnswered ? <p className="muted">{question.fact}</p> : null}
+            {hasAnswered ? (
+              <p className="muted">{practiceMode ? practiceFact : question.fact}</p>
+            ) : null}
           </form>
         ) : null}
       </div>
