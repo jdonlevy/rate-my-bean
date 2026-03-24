@@ -73,9 +73,11 @@ export default function DailyQuiz({ isLoggedIn }) {
         const data = await res.json();
         setAnswer({ selectedIndex, correct: Boolean(data.correct) });
         setPracticeFact(data.fact || "");
-        if (data.correct && typeof window !== "undefined" && "speechSynthesis" in window) {
+        if (typeof window !== "undefined" && "speechSynthesis" in window) {
           const utterance = new SpeechSynthesisUtterance(
-            "Good beaning, no beans added to your beanometer as this is just a practice question, have a beany day."
+            data.correct
+              ? "Good beaning, no beans added to your beanometer as this is just a practice question, have a beany day."
+              : "Zero beans for you."
           );
           utterance.rate = 0.95;
           utterance.pitch = 1.05;
@@ -95,9 +97,11 @@ export default function DailyQuiz({ isLoggedIn }) {
         const data = await res.json();
         setAnswer(data.answer);
         setBeanometer(data.beanometer);
-        if (data.answer?.correct && typeof window !== "undefined" && "speechSynthesis" in window) {
+        if (typeof window !== "undefined" && "speechSynthesis" in window) {
           const utterance = new SpeechSynthesisUtterance(
-            "Good beaning, one bean added to your beanometer, have a beany day."
+            data.answer?.correct
+              ? "Good beaning, one bean added to your beanometer, have a beany day."
+              : "Zero beans for you."
           );
           utterance.rate = 0.95;
           utterance.pitch = 1.05;
@@ -177,7 +181,7 @@ export default function DailyQuiz({ isLoggedIn }) {
                   ? practiceMode
                     ? "Correct! Practice round — no beans added."
                     : "Good beaning, one bean added to your beanometer, have a beany day."
-                  : "Not quite. Try again tomorrow."}
+                  : "Zero beans for you."}
               </p>
             ) : null}
             {hasAnswered ? (

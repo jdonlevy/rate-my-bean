@@ -33,22 +33,8 @@ export function proxy(request) {
   const needsGate = isProtectedPath(pathname);
   if (!needsGate) return NextResponse.next();
 
-  const sessionCookie =
-    request.cookies.get("__Secure-authjs.session-token")?.value ||
-    request.cookies.get("authjs.session-token")?.value;
-  if (sessionCookie) {
-    return NextResponse.next();
-  }
-
-  const accessCookie = request.cookies.get(ACCESS_COOKIE)?.value;
-  if (accessCookie === "1") {
-    return NextResponse.next();
-  }
-
-  const url = request.nextUrl.clone();
-  url.pathname = "/access";
-  url.searchParams.set("next", pathname);
-  return NextResponse.redirect(url);
+  // Access gate disabled.
+  return NextResponse.next();
 }
 
 export const config = {
