@@ -7,7 +7,6 @@ const HEIGHT = 420;
 const PADDLE_WIDTH = 12;
 const PADDLE_HEIGHT = 90;
 const BALL_SIZE = 12;
-const WIN_SCORE = 7;
 
 function clamp(value, min, max) {
   return Math.max(min, Math.min(max, value));
@@ -16,9 +15,8 @@ function clamp(value, min, max) {
 export default function BeanPongGame() {
   const canvasRef = useRef(null);
   const [running, setRunning] = useState(false);
-  const [score, setScore] = useState({ left: 0, right: 0 });
+  const [score, setScore] = useState(0);
   const [gameOver, setGameOver] = useState(false);
-  const [winner, setWinner] = useState("");
 
   const stateRef = useRef({
     leftY: HEIGHT / 2 - PADDLE_HEIGHT / 2,
@@ -29,10 +27,7 @@ export default function BeanPongGame() {
     ballVY: 2.2,
   });
 
-  const scoreLabel = useMemo(
-    () => `${score.left} : ${score.right}`,
-    [score]
-  );
+  const scoreLabel = useMemo(() => `${score} returns`, [score]);
 
   const resetRound = () => {
     const state = stateRef.current;
@@ -46,9 +41,8 @@ export default function BeanPongGame() {
   };
 
   const resetGame = () => {
-    setScore({ left: 0, right: 0 });
+    setScore(0);
     setGameOver(false);
-    setWinner("");
     resetRound();
   };
 
@@ -138,6 +132,7 @@ export default function BeanPongGame() {
       ) {
         state.ballVX = Math.abs(state.ballVX) + 0.2;
         state.ballVY += (state.ballY - (state.leftY + PADDLE_HEIGHT / 2)) * 0.03;
+        setScore((prev) => prev + 1);
       }
       const rightX = WIDTH - 28 - PADDLE_WIDTH;
       if (
@@ -150,31 +145,12 @@ export default function BeanPongGame() {
       }
 
       if (state.ballX < 0) {
-        setScore((prev) => {
-          const next = { ...prev, right: prev.right + 1 };
-          if (next.right >= WIN_SCORE) {
-            setGameOver(true);
-            setWinner("CPU");
-            setRunning(false);
-          } else {
-            resetRound();
-          }
-          return next;
-        });
+        setGameOver(true);
+        setRunning(false);
       }
 
       if (state.ballX > WIDTH) {
-        setScore((prev) => {
-          const next = { ...prev, left: prev.left + 1 };
-          if (next.left >= WIN_SCORE) {
-            setGameOver(true);
-            setWinner("You");
-            setRunning(false);
-          } else {
-            resetRound();
-          }
-          return next;
-        });
+        resetRound();
       }
 
       animation = requestAnimationFrame(tick);
@@ -219,7 +195,7 @@ export default function BeanPongGame() {
         {!running && (
           <div className="bean-game-overlay">
             <div className="bean-game-panel">
-              <h2>{gameOver ? `${winner} wins!` : "Ready to volley?"}</h2>
+              <h2>{gameOver ? "Round over" : "Ready to volley?"}</h2>
               <p className="muted">Move your mouse or touch to control the paddle.</p>
               <button
                 className="button"
