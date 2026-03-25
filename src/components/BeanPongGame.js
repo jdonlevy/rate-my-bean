@@ -17,6 +17,10 @@ export default function BeanPongGame() {
   const [running, setRunning] = useState(false);
   const [score, setScore] = useState(0);
   const [gameOver, setGameOver] = useState(false);
+  const [leaderboard, setLeaderboard] = useState([]);
+  const [name, setName] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
 
   const stateRef = useRef({
     leftY: HEIGHT / 2 - PADDLE_HEIGHT / 2,
@@ -44,6 +48,7 @@ export default function BeanPongGame() {
     setScore(0);
     setGameOver(false);
     resetRound();
+    setSaved(false);
   };
 
   useEffect(() => {
@@ -161,6 +166,15 @@ export default function BeanPongGame() {
   }, [running]);
 
   useEffect(() => {
+    fetch("/api/bean-pong/leaderboard")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data?.leaderboard) setLeaderboard(data.leaderboard);
+      })
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const handleMove = (event) => {
@@ -197,6 +211,45 @@ export default function BeanPongGame() {
             <div className="bean-game-panel">
               <h2>{gameOver ? "Round over" : "Ready to volley?"}</h2>
               <p className="muted">Move your mouse or touch to control the paddle.</p>
+              {gameOver ? (
+                <div className="bean-game-submit">
+                  <label className="muted" htmlFor="beanPongName">
+                    Name for the leaderboard
+                  </label>
+                  <input
+                    id="beanPongName"
+                    value={name}
+                    onChange={(event) => setName(event.target.value)}
+                    placeholder="Your name"
+                    maxLength={15}
+                  />
+                  <button
+                    className="button"
+                    type="button"
+                    disabled={saving || !name.trim() || saved}
+                    onClick={async () => {
+                      if (!name.trim()) return;
+                      setSaving(true);
+                      try {
+                        const res = await fetch("/api/bean-pong/score", {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ score, displayName: name.trim() }),
+                        });
+                        if (res.ok) {
+                          const data = await res.json();
+                          setLeaderboard(data.leaderboard || []);
+                          setSaved(true);
+                        }
+                      } finally {
+                        setSaving(false);
+                      }
+                    }}
+                  >
+                    {saved ? "Score saved" : saving ? "Saving..." : "Save score"}
+                  </button>
+                </div>
+              ) : null}
               <button
                 className="button"
                 type="button"
@@ -209,6 +262,22 @@ export default function BeanPongGame() {
               </button>
             </div>
           </div>
+        )}
+      </div>
+
+      <div className="bean-game-leaderboard">
+        <h3>Top bean pong scores</h3>
+        {leaderboard.length ? (
+          <ol>
+            {leaderboard.map((entry, index) => (
+              <li key={`${entry.display_name}-${entry.created_at}-${index}`}>
+                <span>{entry.display_name}</span>
+                <strong>{entry.score}</strong>
+              </li>
+            ))}
+          </ol>
+        ) : (
+          <p className="muted">No scores yet. Be the first.</p>
         )}
       </div>
     </div>
