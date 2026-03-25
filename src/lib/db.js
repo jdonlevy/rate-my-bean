@@ -347,6 +347,17 @@ const initPromise = (async () => {
     `,
     },
     {
+      sql: `
+      CREATE TABLE IF NOT EXISTS bean_snake_scores (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id TEXT,
+        display_name TEXT NOT NULL,
+        score INTEGER NOT NULL,
+        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+      );
+    `,
+    },
+    {
       sql: "CREATE INDEX IF NOT EXISTS idx_ratings_bean_id ON ratings (bean_id);",
     },
     {
@@ -360,6 +371,9 @@ const initPromise = (async () => {
     },
     {
       sql: "CREATE INDEX IF NOT EXISTS idx_quiz_answers_user ON quiz_answers (user_id, quiz_date);",
+    },
+    {
+      sql: "CREATE INDEX IF NOT EXISTS idx_bean_snake_scores ON bean_snake_scores (score DESC);",
     },
     {
       sql: "CREATE INDEX IF NOT EXISTS idx_country_regions_country ON country_regions (country);",
@@ -1113,6 +1127,33 @@ export async function getBeanometerStats(userId) {
     totalUsers: total.rows[0]?.count || 0,
     leaderboard: leaderboard.rows || [],
   };
+}
+
+export async function getBeanSnakeLeaderboard(limit = 10) {
+  await ensureInit();
+  const result = await db.execute({
+    sql: `
+      SELECT display_name, score, created_at
+      FROM bean_snake_scores
+      ORDER BY score DESC, created_at ASC
+      LIMIT ?
+    `,
+    args: [limit],
+  });
+  return result.rows || [];
+}
+
+export async function submitBeanSnakeScore({ userId, displayName, score }) {
+  await ensureInit();
+  if (!displayName || !Number.isFinite(score)) return null;
+  await db.execute({
+    sql: `
+      INSERT INTO bean_snake_scores (user_id, display_name, score)
+      VALUES (?, ?, ?)
+    `,
+    args: [userId || null, displayName.trim(), score],
+  });
+  return true;
 }
 
 export async function getBeanFieldSuggestions() {

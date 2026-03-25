@@ -8,6 +8,17 @@ export default async function Home() {
   const session = await auth();
   return (
     <div className="home">
+      <section className="hero-card game-highlight">
+        <div>
+          <span className="pill">New Bean Game</span>
+          <h2>Bean Snake Arcade</h2>
+          <p className="muted">
+            Play the bean‑powered version of snake. Collect beans, grow longer,
+            and climb the leaderboard.
+          </p>
+        </div>
+        <a className="button" href="/bean-snake">Play Bean Snake</a>
+      </section>
       <BeanFinder />
       {session?.user ? (
         <section className="quiz-section">

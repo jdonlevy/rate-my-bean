@@ -764,6 +764,145 @@ a {
   margin: 10px 0 6px;
 }
 
+.game-highlight {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  background: linear-gradient(135deg, rgba(31, 111, 67, 0.12), rgba(255, 255, 255, 0.96));
+}
+
+.game-highlight h2 {
+  font-size: 26px;
+  letter-spacing: -0.02em;
+}
+
+.bean-game-shell {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.bean-game {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.bean-game-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.bean-game-header h1 {
+  font-size: 34px;
+  letter-spacing: -0.03em;
+}
+
+.bean-game-score {
+  background: var(--card);
+  padding: 12px 18px;
+  border-radius: var(--radius-2);
+  box-shadow: var(--shadow-soft);
+  display: grid;
+  gap: 4px;
+  min-width: 140px;
+  text-align: right;
+}
+
+.bean-game-board {
+  position: relative;
+  border-radius: var(--radius-3);
+  overflow: hidden;
+  background: var(--card);
+  box-shadow: var(--shadow);
+  padding: 18px;
+}
+
+.bean-game-canvas {
+  width: 100%;
+  max-width: 520px;
+  aspect-ratio: 1 / 1;
+  display: block;
+  margin: 0 auto;
+  border-radius: var(--radius-2);
+  border: 1px solid var(--border);
+}
+
+.bean-game-overlay {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: rgba(15, 31, 22, 0.6);
+  padding: 24px;
+}
+
+.bean-game-panel {
+  background: rgba(255, 255, 255, 0.96);
+  border-radius: var(--radius-2);
+  padding: 24px;
+  max-width: 360px;
+  text-align: center;
+  display: grid;
+  gap: 12px;
+  box-shadow: var(--shadow);
+}
+
+.bean-game-submit {
+  display: grid;
+  gap: 8px;
+  text-align: left;
+}
+
+.bean-game-submit input {
+  padding: 10px 12px;
+  border-radius: var(--radius-1);
+  border: 1px solid var(--border);
+}
+
+.bean-game-controls {
+  display: grid;
+  gap: 10px;
+  justify-items: center;
+}
+
+.bean-game-controls-row {
+  display: flex;
+  gap: 10px;
+}
+
+.bean-game-leaderboard {
+  background: var(--card);
+  border-radius: var(--radius-2);
+  padding: 20px;
+  box-shadow: var(--shadow-soft);
+  display: grid;
+  gap: 12px;
+}
+
+.bean-game-leaderboard ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.bean-game-leaderboard li {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.85);
+  font-size: 14px;
+}
+
 .cta-row {
   display: flex;
   flex-wrap: wrap;
