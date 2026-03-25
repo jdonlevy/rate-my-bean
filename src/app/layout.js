@@ -37,6 +37,7 @@ export default async function RootLayout({ children }) {
               <a href="/beans">All Beans</a>
               <a href="/beans/new">Add Bean</a>
               <a href="/bean-snake">Bean Snake</a>
+              <a href="/bean-pong">Bean Pong</a>
             </nav>
             <div className="auth-actions">
               {process.env.VERCEL_ENV === "preview" ? (

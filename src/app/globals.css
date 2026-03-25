@@ -778,6 +778,10 @@ a {
   letter-spacing: -0.02em;
 }
 
+.game-highlight.alt {
+  background: linear-gradient(135deg, rgba(243, 178, 71, 0.18), rgba(255, 255, 255, 0.96));
+}
+
 .bean-game-shell {
   display: flex;
   flex-direction: column;

@@ -19,6 +19,17 @@ export default async function Home() {
         </div>
         <a className="button" href="/bean-snake">Play Bean Snake</a>
       </section>
+      <section className="hero-card game-highlight alt">
+        <div>
+          <span className="pill">New Bean Game</span>
+          <h2>Bean Pong</h2>
+          <p className="muted">
+            Rally beans back and forth in our caffeinated twist on pong. Can
+            you beat the CPU?
+          </p>
+        </div>
+        <a className="button" href="/bean-pong">Play Bean Pong</a>
+      </section>
       <BeanFinder />
       {session?.user ? (
         <section className="quiz-section">

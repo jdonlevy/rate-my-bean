@@ -250,6 +250,7 @@ export default function BeanSnakeGame() {
                     value={name}
                     onChange={(event) => setName(event.target.value)}
                     placeholder="Your name"
+                    maxLength={15}
                   />
                   <button
                     className="button"
