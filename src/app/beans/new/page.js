@@ -21,6 +21,7 @@ export default async function NewBeanPage({ searchParams }) {
         <NewBeanForm
           suggestions={suggestions}
           initialRoasteryId={initialRoasteryId}
+          userName={session?.user?.name || session?.user?.email || ""}
         />
       ) : (
         <div className="card">

@@ -332,14 +332,30 @@ function SearchSelect({
   );
 }
 
-export default function NewBeanForm({ suggestions, initialRoasteryId = "" }) {
+function formatPossessive(name) {
+  if (!name) return "Your bean";
+  const trimmed = name.trim();
+  if (!trimmed) return "Your bean";
+  const suffix = trimmed.endsWith("s") ? "'" : "'s";
+  return `${trimmed}${suffix} bean`;
+}
+
+export default function NewBeanForm({
+  suggestions,
+  initialRoasteryId = "",
+  userName = "",
+}) {
   const [form, setForm] = useState(initialState);
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
   const [autoFilling, setAutoFilling] = useState(false);
+  const [bagImageFile, setBagImageFile] = useState(null);
+  const [bagImagePreview, setBagImagePreview] = useState("");
   const router = useRouter();
   const countryRegions = suggestions?.countryRegions || [];
   const roasteries = suggestions?.roasteries || [];
+  const showRoasterDetails = !form.roaster.trim() || !form.roasterUrl.trim();
+  const ownerLabel = formatPossessive(userName);
 
   useEffect(() => {
     if (initialRoasteryId) {
@@ -349,6 +365,16 @@ export default function NewBeanForm({ suggestions, initialRoasteryId = "" }) {
       }));
     }
   }, [initialRoasteryId]);
+
+  useEffect(() => {
+    if (!bagImageFile) {
+      setBagImagePreview("");
+      return;
+    }
+    const url = URL.createObjectURL(bagImageFile);
+    setBagImagePreview(url);
+    return () => URL.revokeObjectURL(url);
+  }, [bagImageFile]);
 
   const fuzzyMatches = useMemo(() => {
     const names = suggestions?.names || [];
@@ -419,9 +445,9 @@ export default function NewBeanForm({ suggestions, initialRoasteryId = "" }) {
     }));
   }
 
-  async function handleBagImageChange(event) {
-    const file = event.target.files?.[0];
+  async function handleBagImageFile(file) {
     if (!file) return;
+    setBagImageFile(file);
 
     setAutoFilling(true);
     setError("");
@@ -458,6 +484,22 @@ export default function NewBeanForm({ suggestions, initialRoasteryId = "" }) {
     } finally {
       setAutoFilling(false);
     }
+  }
+
+  async function handleBagImageChange(event) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    await handleBagImageFile(file);
+  }
+
+  async function handlePaste(event) {
+    const items = Array.from(event.clipboardData?.items || []);
+    const imageItem = items.find((item) => item.type.startsWith("image/"));
+    if (!imageItem) return;
+    event.preventDefault();
+    const file = imageItem.getAsFile();
+    if (!file) return;
+    await handleBagImageFile(file);
   }
 
   async function handleSubmit(event) {
@@ -513,7 +555,7 @@ export default function NewBeanForm({ suggestions, initialRoasteryId = "" }) {
       Object.entries(form).forEach(([key, value]) => {
         formData.append(key, value);
       });
-      const bagImage = event.currentTarget.bagImage.files?.[0];
+      const bagImage = bagImageFile || event.currentTarget.bagImage.files?.[0];
       const coffeeImage = event.currentTarget.coffeeImage.files?.[0];
       if (bagImage) formData.append("bagImage", bagImage);
       if (coffeeImage) formData.append("coffeeImage", coffeeImage);
@@ -544,135 +586,213 @@ export default function NewBeanForm({ suggestions, initialRoasteryId = "" }) {
           {saving ? "Saving..." : "Add Bean"}
         </button>
       </div>
-      <div className="bean-form-grid">
-        <div className="form-row">
-        <label htmlFor="bagImage">Coffee bag photo *</label>
-        <input
-          id="bagImage"
-          name="bagImage"
-          type="file"
-          accept="image/jpeg,image/png,image/heic,image/heif"
-          capture="environment"
-          required
-          onChange={handleBagImageChange}
-        />
-        {autoFilling ? <p className="hint">Reading the label…</p> : null}
+      <div className="bean-form-grid bean-form-card">
+        <div className="bean-form-hero">
+          <div>
+            <span className="bean-form-tag">New roast</span>
+            <h1 className="bean-form-title">Rate a new bean</h1>
+            <p className="muted">
+              Upload the bag label first. We will prefill the roast details for you.
+            </p>
+          </div>
+          <div className="bean-form-meta">
+            <span className="bean-form-code">{ownerLabel}</span>
+            <span className="bean-form-badge">Bean</span>
+          </div>
         </div>
 
-        <SearchSelect
-        id="originCountry"
-        name="originCountry"
-        label="Origin country *"
-        value={form.originCountry}
-        onChange={updateField}
-        options={Array.from(
-          new Set(
-            (suggestions?.countryRegions || []).map((row) => row.country)
-          )
-        ).sort()}
-        allowCustom={false}
-        required
-        placeholder="Select a country"
-        />
-        {fuzzyMatches.countryMatch ? (
-        <p className="hint">
-          Similar origin country exists: {fuzzyMatches.countryMatch.value}
-        </p>
-        ) : null}
-
-        <div className="form-row">
-        <label htmlFor="reviewerName">Reviewer name</label>
-        <input
-          id="reviewerName"
-          name="reviewerName"
-          value={form.reviewerName}
-          onChange={updateField}
-          placeholder="Your name"
-        />
+        <div className="bean-form-field">
+          <label htmlFor="bagImage">Coffee bag photo *</label>
+          <input
+            id="bagImage"
+            name="bagImage"
+            type="file"
+            accept="image/jpeg,image/png,image/heic,image/heif"
+            capture="environment"
+            required={!bagImageFile}
+            onChange={handleBagImageChange}
+          />
+          <div
+            className="paste-zone"
+            role="button"
+            tabIndex={0}
+            onPaste={handlePaste}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") event.currentTarget.focus();
+            }}
+          >
+            Click here, then press Cmd/Ctrl+V to paste a bag image
+          </div>
+          {autoFilling ? <p className="hint">Reading the label…</p> : null}
+          {bagImagePreview ? (
+            <div className="bean-form-preview">
+              <img src={bagImagePreview} alt="Bag preview" />
+              <button
+                className="link"
+                type="button"
+                onClick={() => setBagImageFile(null)}
+              >
+                Remove image
+              </button>
+            </div>
+          ) : null}
         </div>
 
-        <div className="form-row">
-        <label htmlFor="roasteryId">Roastery *</label>
-        <select
-          id="roasteryId"
-          name="roasteryId"
-          value={form.roasteryId}
-          onChange={updateField}
-          required
-        >
-          <option value="">Select a roastery</option>
-          {roasteries.map((roastery) => (
-            <option key={roastery.id} value={roastery.id}>
-              {roastery.name}
-              {roastery.city ? ` · ${roastery.city}` : ""}
-              {roastery.country ? ` · ${roastery.country}` : ""}
-            </option>
-          ))}
-        </select>
+        <div className="bean-form-grid-slim">
+          <div className="form-row">
+            <label htmlFor="roasteryId">Roastery *</label>
+            <select
+              id="roasteryId"
+              name="roasteryId"
+              value={form.roasteryId}
+              onChange={(event) => {
+                updateField(event);
+                const match = roasteries.find(
+                  (roastery) => String(roastery.id) === event.target.value
+                );
+                if (match) {
+                  setForm((prev) => ({
+                    ...prev,
+                    roaster: match.name || prev.roaster,
+                    roasterUrl: match.website || prev.roasterUrl,
+                  }));
+                }
+              }}
+              required
+            >
+              <option value="">Select a roastery</option>
+              {roasteries.map((roastery) => (
+                <option key={roastery.id} value={roastery.id}>
+                  {roastery.name}
+                  {roastery.city ? ` · ${roastery.city}` : ""}
+                  {roastery.country ? ` · ${roastery.country}` : ""}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <SearchSelect
+            id="name"
+            name="name"
+            label="Blend name *"
+            value={form.name}
+            onChange={updateField}
+            options={suggestions?.names || []}
+            required
+            placeholder="Start typing a blend name"
+          />
         </div>
 
-        <SearchSelect
-        id="originRegion"
-        name="originRegion"
-        label="Origin region *"
-        value={form.originRegion}
-        onChange={updateField}
-        options={regionOptions}
-        allowCustom={false}
-        required
-        placeholder={
-          form.originCountry ? "Select a region" : "Select a country first"
-        }
-        />
-        {fuzzyMatches.regionMatch ? (
-        <p className="hint">
-          Similar origin region exists: {fuzzyMatches.regionMatch.value}
-        </p>
+        {showRoasterDetails ? (
+          <div className="card bean-form-rating">
+            <h3>Roaster details</h3>
+            <div className="form">
+              <SearchSelect
+                id="roaster"
+                name="roaster"
+                label="Roaster *"
+                value={form.roaster}
+                onChange={updateField}
+                options={suggestions?.roasters || []}
+                required
+                placeholder="Start typing a roaster"
+              />
+              <div className="form-row">
+                <label htmlFor="roasterUrl">Roaster website *</label>
+                <input
+                  id="roasterUrl"
+                  name="roasterUrl"
+                  value={form.roasterUrl}
+                  onChange={updateField}
+                  placeholder="https://roaster.com"
+                  required
+                />
+              </div>
+            </div>
+          </div>
         ) : null}
 
-        <SearchSelect
-        id="roaster"
-        name="roaster"
-        label="Roaster *"
-        value={form.roaster}
-        onChange={updateField}
-        options={suggestions?.roasters || []}
-        required
-        placeholder="Start typing a roaster"
-        />
-        {fuzzyMatches.roasterMatch ? (
-        <p className="hint">
-          Similar roaster exists: {fuzzyMatches.roasterMatch.value}
-        </p>
-        ) : null}
+        <div className="bean-form-grid-slim">
+          <SearchSelect
+            id="originCountry"
+            name="originCountry"
+            label="Origin country *"
+            value={form.originCountry}
+            onChange={updateField}
+            options={Array.from(
+              new Set(
+                (suggestions?.countryRegions || []).map((row) => row.country)
+              )
+            ).sort()}
+            allowCustom={false}
+            required
+            placeholder="Select a country"
+          />
 
-        <div className="form-row">
-        <label htmlFor="roasterUrl">Roaster website *</label>
-        <input
-          id="roasterUrl"
-          name="roasterUrl"
-          value={form.roasterUrl}
-          onChange={updateField}
-          placeholder="https://roaster.com"
-          required
-        />
+          <SearchSelect
+            id="originRegion"
+            name="originRegion"
+            label="Origin region *"
+            value={form.originRegion}
+            onChange={updateField}
+            options={regionOptions}
+            allowCustom={false}
+            required
+            placeholder={
+              form.originCountry ? "Select a region" : "Select a country first"
+            }
+          />
         </div>
 
-        <SearchSelect
-        id="name"
-        name="name"
-        label="Blend name *"
-        value={form.name}
-        onChange={updateField}
-        options={suggestions?.names || []}
-        required
-        placeholder="Start typing a blend name"
-        />
-        {fuzzyMatches.nameMatch ? (
-        <p className="hint">
-          Similar name already exists: {fuzzyMatches.nameMatch.value}
-        </p>
-        ) : null}
+        <div className="bean-form-grid-slim">
+          <div className="form-row">
+            <label htmlFor="roastLevel">
+              Roast level *
+              <span
+                className="tooltip"
+                title="How dark the beans were roasted (e.g., light, medium, dark)."
+              >
+                ?
+              </span>
+            </label>
+            <select
+              id="roastLevel"
+              name="roastLevel"
+              value={form.roastLevel}
+              onChange={updateField}
+              required
+            >
+              <option value="">Select a roast</option>
+              <option value="Light">Light</option>
+              <option value="Light-medium">Light-medium</option>
+              <option value="Medium">Medium</option>
+              <option value="Medium-dark">Medium-dark</option>
+              <option value="Dark">Dark</option>
+            </select>
+          </div>
+
+          <div className="form-row">
+            <label htmlFor="blend">Blend?</label>
+            <select
+              id="blend"
+              name="blend"
+              value={form.blend ? "true" : "false"}
+              onChange={(event) =>
+                updateField({
+                  target: {
+                    name: "blend",
+                    value: event.target.value === "true",
+                    type: "checkbox",
+                    checked: event.target.value === "true",
+                  },
+                })
+              }
+            >
+              <option value="false">Single origin</option>
+              <option value="true">Blend</option>
+            </select>
+          </div>
+        </div>
 
         {fuzzyMatches.comboMatch ? (
           <div className="card">
@@ -692,130 +812,102 @@ export default function NewBeanForm({ suggestions, initialRoasteryId = "" }) {
             </p>
           </div>
         ) : null}
-        <div className="form-row">
-        <label htmlFor="blend">Blend?</label>
-        <select
-          id="blend"
-          name="blend"
-          value={form.blend ? "true" : "false"}
-          onChange={(event) =>
-            updateField({
-              target: {
-                name: "blend",
-                value: event.target.value === "true",
-                type: "checkbox",
-                checked: event.target.value === "true",
-              },
-            })
-          }
-        >
-          <option value="false">Single origin</option>
-          <option value="true">Blend</option>
-        </select>
-        </div>
 
-        <div className="form-row">
-        <label htmlFor="process">Process</label>
-        <select
-          id="process"
-          name="process"
-          value={form.process}
-          onChange={updateField}
-        >
-          <option value="">Select a process</option>
-          <option value="Washed">Washed</option>
-          <option value="Natural">Natural</option>
-          <option value="Honey">Honey</option>
-          <option value="Wet-hulled">Wet-hulled</option>
-          <option value="Anaerobic">Anaerobic</option>
-          <option value="Carbonic maceration">Carbonic maceration</option>
-        </select>
-        </div>
+        <div className="card bean-form-rating">
+          <h3>Initial rating (optional)</h3>
+          <div className="form">
+            <div className="form-row">
+              <label htmlFor="ratingScore">Score (1-5)</label>
+              <select
+                id="ratingScore"
+                name="ratingScore"
+                value={form.ratingScore}
+                onChange={updateField}
+              >
+                <option value="">Select a score</option>
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+              </select>
+            </div>
 
-        <div className="form-row">
-        <label htmlFor="roastLevel">
-          Roast level *
-          <span
-            className="tooltip"
-            title="How dark the beans were roasted (e.g., light, medium, dark)."
-          >
-            ?
-          </span>
-        </label>
-        <select
-          id="roastLevel"
-          name="roastLevel"
-          value={form.roastLevel}
-          onChange={updateField}
-          required
-        >
-          <option value="">Select a roast</option>
-          <option value="Light">Light</option>
-          <option value="Light-medium">Light-medium</option>
-          <option value="Medium">Medium</option>
-          <option value="Medium-dark">Medium-dark</option>
-          <option value="Dark">Dark</option>
-        </select>
-        </div>
+            <div className="form-row">
+              <label htmlFor="ratingPricePaid">Price paid (GBP)</label>
+              <input
+                id="ratingPricePaid"
+                name="ratingPricePaid"
+                value={form.ratingPricePaid}
+                onChange={updateField}
+                type="number"
+                step="0.01"
+                min="0"
+                required={Boolean(form.ratingScore)}
+              />
+            </div>
 
-        <div className="card">
-        <h3>Add an initial rating (optional)</h3>
-        <div className="form">
-          <div className="form-row">
-            <label htmlFor="ratingScore">Score (1-5)</label>
-            <select
-              id="ratingScore"
-              name="ratingScore"
-              value={form.ratingScore}
-              onChange={updateField}
-            >
-              <option value="">Select a score</option>
-              <option value="1">1</option>
-              <option value="2">2</option>
-              <option value="3">3</option>
-              <option value="4">4</option>
-              <option value="5">5</option>
-            </select>
-          </div>
-
-          <div className="form-row">
-            <label htmlFor="ratingPricePaid">Price paid (GBP)</label>
-            <input
-              id="ratingPricePaid"
-              name="ratingPricePaid"
-              value={form.ratingPricePaid}
-              onChange={updateField}
-              type="number"
-              step="0.01"
-              min="0"
-              required={Boolean(form.ratingScore)}
-            />
-          </div>
-
-          <div className="form-row">
-            <label htmlFor="ratingNotes">Tasting notes</label>
-            <textarea
-              id="ratingNotes"
-              name="ratingNotes"
-              rows={3}
-              value={form.ratingNotes}
-              onChange={updateField}
-              required={Boolean(form.ratingScore)}
-            />
+            <div className="form-row">
+              <label htmlFor="ratingNotes">Tasting notes</label>
+              <textarea
+                id="ratingNotes"
+                name="ratingNotes"
+                rows={3}
+                value={form.ratingNotes}
+                onChange={updateField}
+                required={Boolean(form.ratingScore)}
+              />
+            </div>
           </div>
         </div>
-        </div>
 
-        <div className="form-row">
-        <label htmlFor="coffeeImage">Brew photo (optional)</label>
-        <input
-          id="coffeeImage"
-          name="coffeeImage"
-          type="file"
-          accept="image/jpeg,image/png,image/heic,image/heif"
-          capture="environment"
-        />
-        </div>
+        <details className="bean-form-details">
+          <summary>More roast details</summary>
+          <div className="form">
+            <div className="form-row">
+              <label htmlFor="process">Process</label>
+              <select
+                id="process"
+                name="process"
+                value={form.process}
+                onChange={updateField}
+              >
+                <option value="">Select a process</option>
+                <option value="Washed">Washed</option>
+                <option value="Natural">Natural</option>
+                <option value="Honey">Honey</option>
+                <option value="Wet-hulled">Wet-hulled</option>
+                <option value="Anaerobic">Anaerobic</option>
+                <option value="Carbonic maceration">Carbonic maceration</option>
+              </select>
+            </div>
+
+            <div className="form-row">
+              <label htmlFor="reviewerName">Reviewer name</label>
+              <input
+                id="reviewerName"
+                name="reviewerName"
+                value={form.reviewerName}
+                onChange={updateField}
+                placeholder="Your name"
+              />
+            </div>
+
+            <div className="form-row">
+              <label htmlFor="coffeeImage">Brew photo (optional)</label>
+              <input
+                id="coffeeImage"
+                name="coffeeImage"
+                type="file"
+                accept="image/jpeg,image/png,image/heic,image/heif"
+                capture="environment"
+              />
+            </div>
+          </div>
+        </details>
+
+        <input type="hidden" name="roaster" value={form.roaster} />
+        <input type="hidden" name="roasterUrl" value={form.roasterUrl} />
 
         {error ? <p className="muted">{error}</p> : null}
       </div>
