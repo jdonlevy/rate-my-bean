@@ -30,6 +30,8 @@ export default function BeanFinder() {
   const [mapRef, setMapRef] = useState(null);
   const [hoveredId, setHoveredId] = useState(null);
   const [status, setStatus] = useState("Search for a location to load seeded roasteries.");
+  const [mapBounds, setMapBounds] = useState(null);
+  const [mapZoom, setMapZoom] = useState(null);
   const inFlight = useRef(false);
   const lastBoundsKey = useRef("");
   const lastBoundsAt = useRef(0);
@@ -90,7 +92,7 @@ export default function BeanFinder() {
   const fetchRoasteries = useCallback(async (bounds, zoomLevel) => {
     if (zoomLevel != null && zoomLevel < 9) {
       setRoasteries([]);
-      setStatus("Zoom in to load roasteries.");
+      setStatus("Zoom in to search this area.");
       return;
     }
     if (!bounds) return;
@@ -274,7 +276,16 @@ export default function BeanFinder() {
     }
   }
 
-  const handleBounds = useCallback(() => {}, []);
+  const handleBounds = useCallback((bounds, zoomLevel) => {
+    if (!bounds) return;
+    setMapBounds(bounds);
+    setMapZoom(zoomLevel ?? null);
+    if (zoomLevel != null && zoomLevel < 9) {
+      setStatus("Zoom in to search this area.");
+    } else if (zoomLevel != null) {
+      setStatus("Ready to search this area.");
+    }
+  }, []);
 
   return (
     <section className="finder-hero">
@@ -468,8 +479,22 @@ export default function BeanFinder() {
             <div>
               <span className="pill">Explore</span>
               <h2>Global Roastery Map</h2>
-              <p className="muted">Pan and zoom to explore seeded roasteries.</p>
+              <p className="muted">Zoom in, then search the map area for roasteries.</p>
             </div>
+            <button
+              className="button secondary"
+              type="button"
+              disabled={!mapBounds || mapZoom == null || mapZoom < 9 || loading}
+              onClick={() => {
+                if (!mapBounds || mapZoom == null || mapZoom < 9) {
+                  setStatus("Zoom in to search this area.");
+                  return;
+                }
+                fetchRoasteries(mapBounds, mapZoom);
+              }}
+            >
+              {mapZoom != null && mapZoom < 9 ? "Zoom in to search" : "Search area"}
+            </button>
           </div>
           <div className="map-frame">
             <BeanFinderMap

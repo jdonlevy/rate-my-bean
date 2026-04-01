@@ -151,6 +151,9 @@ a {
 .home {
   position: relative;
   isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
 }
 
 .home::before {
