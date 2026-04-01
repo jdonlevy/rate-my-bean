@@ -1140,12 +1140,16 @@ export async function getBeanometerStats(userId) {
   const total = await db.execute({
     sql: "SELECT COUNT(*) AS count FROM user_beanometer",
   });
+  const totalBeans = await db.execute({
+    sql: "SELECT COALESCE(SUM(beans_count), 0) AS total FROM user_beanometer",
+  });
 
   return {
     beansCount,
     rank: (better.rows[0]?.better || 0) + 1,
     totalUsers: total.rows[0]?.count || 0,
     leaderboard: leaderboard.rows || [],
+    totalBeans: totalBeans.rows[0]?.total || 0,
   };
 }
 

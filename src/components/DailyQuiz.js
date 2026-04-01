@@ -46,14 +46,10 @@ export default function DailyQuiz({ isLoggedIn }) {
   }, [isLoggedIn]);
 
   const options = useMemo(() => question?.options || [], [question]);
-  const beanMax = useMemo(() => {
-    const top = beanometer?.leaderboard?.[0]?.beans_count || 0;
-    return Math.max(10, top);
-  }, [beanometer]);
   const beanPercent = useMemo(() => {
-    const count = beanometer?.beansCount || 0;
-    return Math.min(100, Math.round((count / beanMax) * 100));
-  }, [beanometer, beanMax]);
+    const count = beanometer?.totalBeans || 0;
+    return Math.min(100, count);
+  }, [beanometer]);
 
   async function handleSubmit(event) {
     event.preventDefault();
@@ -210,7 +206,7 @@ export default function DailyQuiz({ isLoggedIn }) {
       </div>
       <div className="card beanometer-card">
         <span className="pill">Beanometer</span>
-        <h3>Your beans</h3>
+        <h3>Community beans</h3>
         <div className="beanometer-thermo">
           <div className="thermo-tube">
             <div
@@ -218,38 +214,16 @@ export default function DailyQuiz({ isLoggedIn }) {
               style={{ height: `${beanPercent}%` }}
             >
               <span className="thermo-count">
-                {beanometer?.beansCount ?? 0}
+                {beanometer?.totalBeans ?? 0}
               </span>
             </div>
           </div>
           <div className="thermo-meta">
             <div className="beanometer-count">
-              <span className="bean-count">{beanometer?.beansCount ?? 0}</span>
-              <span className="muted">beans earned</span>
+              <span className="bean-count">{beanometer?.totalBeans ?? 0}</span>
+              <span className="muted">total beans earned</span>
             </div>
-            <div className="beanometer-rank">
-              <span>Rank</span>
-              <strong>
-                {beanometer?.rank ?? "-"} / {beanometer?.totalUsers ?? "-"}
-              </strong>
-            </div>
-            <p className="muted">Top today: {beanMax} beans</p>
           </div>
-        </div>
-        <div className="beanometer-leaderboard">
-          <h4>Leaderboard</h4>
-          {beanometer?.leaderboard?.length ? (
-            <ol>
-              {beanometer.leaderboard.map((entry) => (
-                <li key={entry.user_id}>
-                  <span>{entry.label}</span>
-                  <strong>{entry.beans_count}</strong>
-                </li>
-              ))}
-            </ol>
-          ) : (
-            <p className="muted">No scores yet.</p>
-          )}
         </div>
       </div>
     </aside>
