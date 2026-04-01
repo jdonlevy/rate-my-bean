@@ -993,7 +993,13 @@ export async function getOrCreateDailyQuiz(dateKey = todayKey()) {
   }
 
   const pick = await db.execute({
-    sql: "SELECT id FROM quiz_questions ORDER BY RANDOM() LIMIT 1",
+    sql: `
+      SELECT id
+      FROM quiz_questions
+      WHERE id NOT IN (SELECT question_id FROM daily_quiz)
+      ORDER BY RANDOM()
+      LIMIT 1
+    `,
   });
   const questionId = pick.rows[0]?.id;
   if (!questionId) {
