@@ -27,24 +27,30 @@ export async function POST(request) {
   const existing = await getUserQuizAnswer(userId, quiz.dateKey);
   if (existing) {
     const stats = await getBeanometerStats(userId);
-    return Response.json({
-      answer: {
-        selectedIndex: existing.selected_index,
-        correct: Boolean(existing.correct),
+    return Response.json(
+      {
+        answer: {
+          selectedIndex: existing.selected_index,
+          correct: Boolean(existing.correct),
+        },
+        beanometer: stats,
+        alreadyAnswered: true,
       },
-      beanometer: stats,
-      alreadyAnswered: true,
-    });
+      { headers: { "Cache-Control": "no-store" } }
+    );
   }
 
   const result = await submitDailyQuizAnswer(userId, selectedIndex, quiz.dateKey);
   const stats = await getBeanometerStats(userId);
 
-  return Response.json({
-    answer: {
-      selectedIndex,
-      correct: Boolean(result.correct),
+  return Response.json(
+    {
+      answer: {
+        selectedIndex,
+        correct: Boolean(result.correct),
+      },
+      beanometer: stats,
     },
-    beanometer: stats,
-  });
+    { headers: { "Cache-Control": "no-store" } }
+  );
 }

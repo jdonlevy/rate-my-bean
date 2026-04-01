@@ -225,6 +225,21 @@ export default function DailyQuiz({ isLoggedIn }) {
             </div>
           </div>
         </div>
+        <div className="beanometer-leaderboard">
+          <h4>Leaderboard</h4>
+          {beanometer?.leaderboard?.length ? (
+            <ol>
+              {beanometer.leaderboard.map((entry) => (
+                <li key={entry.user_id}>
+                  <span>{entry.label}</span>
+                  <strong>{entry.beans_count}</strong>
+                </li>
+              ))}
+            </ol>
+          ) : (
+            <p className="muted">No scores yet.</p>
+          )}
+        </div>
       </div>
     </aside>
     </>
