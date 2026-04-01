@@ -26,6 +26,11 @@ function BoundsWatcher({ onBounds }) {
       const bounds = map.getBounds();
       onBounds(bounds, map.getZoom());
     },
+    zoomend: (event) => {
+      const map = event.target;
+      const bounds = map.getBounds();
+      onBounds(bounds, map.getZoom());
+    },
   });
   return null;
 }
