@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 
 export const metadata = {
   title: "Rate My Bean",
-  description: "Rate coffee beans and discover top regions.",
+  description: "Find great coffee roasters and beans near you.",
 };
 
 export default async function RootLayout({ children }) {
@@ -29,15 +29,13 @@ export default async function RootLayout({ children }) {
               <span className="brand-dot" />
               <div>
                 <p className="brand-title">Rate My Bean</p>
-                <p className="brand-subtitle">Coffee ratings, simplified.</p>
+                <p className="brand-subtitle">Find great beans near you.</p>
               </div>
             </div>
             <nav className="nav-links">
               <a href="/">Bean Finder</a>
               <a href="/beans">All Beans</a>
               <a href="/beans/new">Add Bean</a>
-              <a href="/bean-snake">Bean Snake</a>
-              <a href="/bean-pong">Bean Pong</a>
             </nav>
             <div className="auth-actions">
               {process.env.VERCEL_ENV === "preview" ? (
