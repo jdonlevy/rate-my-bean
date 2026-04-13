@@ -24,6 +24,8 @@ export async function GET(request) {
   const east = parseNumber(searchParams.get("east"));
   const lat = parseNumber(searchParams.get("lat"));
   const lon = parseNumber(searchParams.get("lon"));
+  const city = searchParams.get("city");
+  const country = searchParams.get("country");
   let radius = parseNumber(searchParams.get("radius")) || 10000;
 
   let bounds = { south, west, north, east };
@@ -47,7 +49,11 @@ export async function GET(request) {
     }
   }
 
-  const cached = await getRoasteriesByBounds(bounds);
+  const cached = await getRoasteriesByBounds({
+    ...bounds,
+    city,
+    country,
+  });
   return Response.json({ roasteries: cached, stale: false, source: "seed" }, { status: 200 });
 
   // Unreachable

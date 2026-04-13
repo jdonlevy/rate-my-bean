@@ -63,14 +63,17 @@ a {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 22px 0;
+  padding: 14px 0;
   gap: 16px;
 }
 
 .brand {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
+  color: inherit;
+  text-decoration: none;
+  flex-shrink: 0;
 }
 
 .brand-dot {
@@ -79,54 +82,80 @@ a {
   border-radius: 50%;
   background: linear-gradient(135deg, #d47a46, #8c3e1d);
   box-shadow: 0 0 0 6px rgba(212, 122, 70, 0.15);
+  flex-shrink: 0;
 }
 
 .brand-title {
   font-weight: 700;
   letter-spacing: -0.03em;
-}
-
-.brand-subtitle {
-  font-size: 13px;
-  color: var(--muted);
+  font-size: 15px;
 }
 
 .nav-links {
   display: flex;
-  gap: 12px;
+  gap: 2px;
   font-size: 14px;
-}
-
-.auth-actions {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  font-size: 14px;
-}
-
-.auth-actions a {
-  padding: 8px 12px;
-  border-radius: var(--radius-1);
-  border: 1px solid transparent;
-  transition: 0.2s ease;
-  background: var(--surface);
-}
-
-.auth-actions a:hover {
-  border-color: var(--border);
-  background: rgba(255, 255, 255, 0.9);
+  font-weight: 500;
 }
 
 .nav-links a {
-  padding: 8px 12px;
+  padding: 7px 12px;
   border-radius: var(--radius-1);
   border: 1px solid transparent;
-  transition: 0.2s ease;
+  transition: 0.15s ease;
+  color: var(--muted);
 }
 
 .nav-links a:hover {
   border-color: var(--border);
   background: rgba(255, 255, 255, 0.9);
+  color: var(--text);
+}
+
+.nav-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.nav-games {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding-right: 10px;
+  border-right: 1px solid var(--border);
+}
+
+.nav-games a {
+  padding: 6px 10px;
+  border-radius: var(--radius-1);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--muted);
+  border: 1px solid transparent;
+  transition: 0.15s ease;
+}
+
+.nav-games a:hover {
+  color: var(--text);
+  border-color: var(--border);
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.auth-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+}
+
+.nav-email {
+  font-size: 13px;
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .page-shell {
@@ -143,9 +172,40 @@ a {
 }
 
 .site-footer {
-  border-top: none;
-  padding: 18px 0 28px;
+  border-top: 1px solid var(--border);
+  padding: 24px 0 32px;
   font-size: 13px;
+  margin-top: 16px;
+}
+
+.footer-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.footer-nav {
+  display: flex;
+  gap: 2px;
+  flex-wrap: wrap;
+}
+
+.footer-nav a {
+  padding: 5px 10px;
+  border-radius: var(--radius-1);
+  color: var(--muted);
+  transition: color 0.15s ease;
+}
+
+.footer-nav a:hover {
+  color: var(--text);
+}
+
+.footer-copy {
+  font-size: 12px;
+  flex-shrink: 0;
 }
 
 .home {
@@ -174,6 +234,45 @@ a {
   display: flex;
   flex-direction: column;
   gap: 20px;
+}
+
+.home-hero {
+  padding: 48px 0 16px;
+  text-align: center;
+}
+
+.home-hero-text {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  max-width: 580px;
+  margin: 0 auto;
+}
+
+.home-hero h1 {
+  font-size: 52px;
+  letter-spacing: -0.04em;
+  line-height: 1.05;
+  text-wrap: balance;
+}
+
+.home-hero p {
+  font-size: 17px;
+  color: var(--muted);
+  line-height: 1.65;
+  text-wrap: balance;
+}
+
+.home-hero .cta-row {
+  justify-content: center;
+  margin-top: 4px;
+}
+
+.games-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
 }
 
 .quiz-section {
@@ -353,10 +452,72 @@ a {
 .hero-card {
   background: var(--card);
   border-radius: var(--radius-3);
-  padding: 26px;
+  padding: 32px;
   box-shadow: var(--shadow-soft);
   border: none;
   backdrop-filter: blur(10px);
+}
+
+.hero-card > h1 {
+  font-size: 34px;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+}
+
+.hero-card > p.muted {
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 12px;
+  padding: 32px 16px;
+}
+
+.empty-state-icon {
+  font-size: 36px;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+
+.empty-state h3 {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.empty-state .cta-row {
+  justify-content: center;
+  margin-top: 4px;
+}
+
+.welcome-card {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  max-width: 560px;
+}
+
+.welcome-back {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.welcome-icon {
+  font-size: 48px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.welcome-back h1 {
+  font-size: 30px;
+  letter-spacing: -0.03em;
+  margin-bottom: 4px;
 }
 
 .hero h1 {
@@ -1070,6 +1231,28 @@ a {
   }
 }
 
+@media (max-width: 768px) {
+  .nav-links {
+    display: none;
+  }
+
+  .nav-games {
+    display: none;
+  }
+
+  .footer-nav {
+    display: none;
+  }
+
+  .home-hero h1 {
+    font-size: 36px;
+  }
+
+  .home-hero p {
+    font-size: 15px;
+  }
+}
+
 .bean-list {
   display: flex;
   flex-direction: column;
@@ -1078,9 +1261,39 @@ a {
 }
 
 .filter-bar {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 20px;
+}
+
+.filter-search-input {
+  width: 100%;
+  padding: 12px 16px;
+  border-radius: var(--radius-1);
+  border: none;
+  background: rgba(255, 255, 255, 0.85);
+  font-size: 15px;
+  outline: none;
+  box-shadow: inset 0 0 0 1px rgba(11, 32, 20, 0.12);
+  transition: 0.2s ease;
+  font-family: inherit;
+}
+
+.filter-search-input:focus {
+  box-shadow: 0 0 0 4px var(--ring);
+}
+
+.filter-chips {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: flex-end;
+}
+
+.filter-chips .form-row {
+  flex: 1;
+  min-width: 100px;
 }
 
 .bean-rows {
@@ -1301,6 +1514,11 @@ a {
   background: rgba(31, 111, 67, 0.12);
   color: var(--accent-2);
   box-shadow: none;
+}
+
+.button.small {
+  padding: 7px 14px;
+  font-size: 13px;
 }
 
 .button.disabled,

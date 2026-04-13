@@ -24,11 +24,14 @@ export default async function NewBeanPage({ searchParams }) {
           userName={session?.user?.name || session?.user?.email || ""}
         />
       ) : (
-        <div className="card">
-          <p className="muted">Sign in to add a blend.</p>
-          <a className="button" href="/login">
-            Sign in
-          </a>
+        <div className="empty-state">
+          <p className="empty-state-icon">🫘</p>
+          <h3>Sign in to add a bean</h3>
+          <p className="muted">You need an account to submit beans to the catalogue.</p>
+          <div className="cta-row">
+            <a className="button" href="/login">Sign in</a>
+            <a className="button secondary" href="/signup">Create account</a>
+          </div>
         </div>
       )}
     </section>

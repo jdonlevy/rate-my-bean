@@ -369,6 +369,21 @@ const initPromise = (async () => {
     `,
     },
     {
+      sql: `
+      CREATE TABLE IF NOT EXISTS bean_availability (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        bean_id INTEGER NOT NULL,
+        roastery_id INTEGER NOT NULL,
+        user_id TEXT NOT NULL,
+        seen_date TEXT NOT NULL,
+        created_at TEXT NOT NULL DEFAULT (datetime('now')),
+        UNIQUE (bean_id, user_id, seen_date),
+        FOREIGN KEY (bean_id) REFERENCES beans (id) ON DELETE CASCADE,
+        FOREIGN KEY (roastery_id) REFERENCES roasteries (id) ON DELETE CASCADE
+      );
+    `,
+    },
+    {
       sql: "CREATE INDEX IF NOT EXISTS idx_ratings_bean_id ON ratings (bean_id);",
     },
     {
@@ -388,6 +403,9 @@ const initPromise = (async () => {
     },
     {
       sql: "CREATE INDEX IF NOT EXISTS idx_bean_pong_scores ON bean_pong_scores (score DESC);",
+    },
+    {
+      sql: "CREATE INDEX IF NOT EXISTS idx_availability_bean ON bean_availability (bean_id, roastery_id, seen_date);",
     },
     {
       sql: "CREATE INDEX IF NOT EXISTS idx_country_regions_country ON country_regions (country);",
@@ -655,9 +673,11 @@ export async function getBeansByRoasteryId(roasteryId) {
         b.coffee_image_type,
         b.created_at,
         AVG(r.score) AS avg_score,
-        COUNT(r.id) AS rating_count
+        COUNT(r.id) AS rating_count,
+        MAX(a.seen_date) AS last_seen
       FROM beans b
       LEFT JOIN ratings r ON r.bean_id = b.id
+      LEFT JOIN bean_availability a ON a.bean_id = b.id AND a.roastery_id = b.roastery_id
       WHERE b.roastery_id = ?
       GROUP BY b.id
       ORDER BY COALESCE(avg_score, 0) DESC, b.created_at DESC
@@ -778,8 +798,21 @@ export async function createRoastery(data) {
   return result.rows[0] || null;
 }
 
-export async function getRoasteriesByBounds({ south, west, north, east }) {
+export async function getRoasteriesByBounds({ south, west, north, east, city, country }) {
   await ensureInit();
+  const conditions = ["latitude BETWEEN ? AND ?", "longitude BETWEEN ? AND ?"];
+  const args = [south, north, west, east];
+  if (city) {
+    const cityValue = `%${city.toLowerCase()}%`;
+    conditions.push(
+      "(LOWER(COALESCE(city, '')) LIKE ? OR LOWER(COALESCE(region, '')) LIKE ?)"
+    );
+    args.push(cityValue, cityValue);
+  }
+  if (country) {
+    conditions.push("LOWER(COALESCE(country, '')) = ?");
+    args.push(country.toLowerCase());
+  }
   const result = await db.execute({
     sql: `
       SELECT
@@ -793,11 +826,10 @@ export async function getRoasteriesByBounds({ south, west, north, east }) {
         latitude,
         longitude
       FROM roasteries
-      WHERE latitude BETWEEN ? AND ?
-        AND longitude BETWEEN ? AND ?
+      WHERE ${conditions.join(" AND ")}
       ORDER BY name ASC
     `,
-    args: [south, north, west, east],
+    args,
   });
   return result.rows;
 }
@@ -863,6 +895,58 @@ export async function getBeanById(id) {
     args: [id],
   });
   return result.rows[0] || null;
+}
+
+export async function markBeanSeenToday({ userId, beanId, roasteryId }) {
+  await ensureInit();
+  const seenDate = todayKey();
+  await db.execute({
+    sql: `
+      INSERT OR IGNORE INTO bean_availability (
+        bean_id,
+        roastery_id,
+        user_id,
+        seen_date
+      ) VALUES (?, ?, ?, ?)
+    `,
+    args: [beanId, roasteryId, userId, seenDate],
+  });
+  const result = await db.execute({
+    sql: `
+      SELECT MAX(seen_date) AS last_seen
+      FROM bean_availability
+      WHERE bean_id = ? AND roastery_id = ?
+    `,
+    args: [beanId, roasteryId],
+  });
+  return result.rows[0]?.last_seen || null;
+}
+
+export async function getTopBeansByCity(city, limit = 6) {
+  await ensureInit();
+  const cityValue = `%${city.toLowerCase()}%`;
+  const result = await db.execute({
+    sql: `
+      SELECT
+        b.id,
+        b.name,
+        b.roastery_id,
+        ro.name AS roastery_name,
+        AVG(r.score) AS avg_score,
+        COUNT(r.id) AS rating_count
+      FROM beans b
+      LEFT JOIN ratings r ON r.bean_id = b.id
+      LEFT JOIN roasteries ro ON ro.id = b.roastery_id
+      WHERE ro.id IS NOT NULL
+        AND (LOWER(COALESCE(ro.city, '')) LIKE ? OR LOWER(COALESCE(ro.region, '')) LIKE ?)
+      GROUP BY b.id
+      HAVING COUNT(r.id) > 0
+      ORDER BY AVG(r.score) DESC, COUNT(r.id) DESC
+      LIMIT ?
+    `,
+    args: [cityValue, cityValue, limit],
+  });
+  return result.rows || [];
 }
 
 export async function getBeanImagesById(id) {

@@ -1,10 +1,13 @@
+import { auth } from "@/auth";
 import { getBeansByRoasteryId, getRoasteryById } from "@/lib/db";
+import RoasteryBeansList from "@/components/RoasteryBeansList";
 
 export const dynamic = "force-dynamic";
 
 export default async function RoasteryPage({ params }) {
   const { id: rawId } = await params;
   const id = Number(rawId);
+  const session = await auth();
   const roastery = Number.isInteger(id) ? await getRoasteryById(id) : null;
 
   if (!roastery) {
@@ -45,32 +48,11 @@ export default async function RoasteryPage({ params }) {
 
       <div className="card">
         <h2>Beans at this roastery</h2>
-        {beans.length === 0 ? (
-          <p className="muted">No beans yet. Add the first one.</p>
-        ) : (
-          <div className="grid">
-            {beans.map((bean) => (
-              <a className="card" href={`/beans/${bean.id}`} key={bean.id}>
-                <div>
-                  <h3>{bean.name}</h3>
-                  <p className="muted">
-                    {bean.origin_country}
-                    {bean.origin_region ? ` · ${bean.origin_region}` : ""}
-                  </p>
-                </div>
-                <div>
-                  <p className="rating">
-                    {Number.isFinite(Number(bean.avg_score))
-                      ? Number(bean.avg_score).toFixed(1)
-                      : "0.0"}
-                    ★
-                  </p>
-                  <p className="muted">{bean.rating_count} ratings</p>
-                </div>
-              </a>
-            ))}
-          </div>
-        )}
+        <RoasteryBeansList
+          beans={beans}
+          roasteryId={roastery.id}
+          canReport={Boolean(session?.user)}
+        />
       </div>
     </section>
   );

@@ -102,107 +102,99 @@ export default function BeansList({ beans, initialFilters = {} }) {
   return (
     <section className="bean-list">
       <div className="card filter-bar">
-        <div className="form-row">
-          <label htmlFor="search">Search</label>
-          <input
-            id="search"
-            name="search"
-            value={filters.search}
-            onChange={updateFilter}
-            placeholder="Name, roaster, country, region"
-          />
-        </div>
-        <div className="form-row">
-          <label htmlFor="country">Country</label>
-          <select id="country" name="country" value={filters.country} onChange={updateFilter}>
-            <option value="">All</option>
-            {countries.map((country) => (
-              <option key={country} value={country}>
-                {country}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="form-row">
-          <label htmlFor="region">Region</label>
-          <select id="region" name="region" value={filters.region} onChange={updateFilter}>
-            <option value="">All</option>
-            {regions.map((region) => (
-              <option key={region} value={region}>
-                {region}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="form-row">
-          <label htmlFor="blend">Type</label>
-          <select id="blend" name="blend" value={filters.blend} onChange={updateFilter}>
-            <option value="">All</option>
-            <option value="blend">Blend</option>
-            <option value="single">Single origin</option>
-          </select>
-        </div>
-        <div className="form-row">
-          <label htmlFor="process">Process</label>
-          <select id="process" name="process" value={filters.process} onChange={updateFilter}>
-            <option value="">All</option>
-            {processes.map((process) => (
-              <option key={process} value={process}>
-                {process}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="form-row">
-          <label htmlFor="roast">Roast</label>
-          <select id="roast" name="roast" value={filters.roast} onChange={updateFilter}>
-            <option value="">All</option>
-            {roasts.map((roast) => (
-              <option key={roast} value={roast}>
-                {roast}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="form-row">
-          <label htmlFor="minPrice">Min price (GBP)</label>
-          <input
-            id="minPrice"
-            name="minPrice"
-            type="number"
-            step="0.01"
-            min="0"
-            value={filters.minPrice}
-            onChange={updateFilter}
-            placeholder="0.00"
-          />
-        </div>
-        <div className="form-row">
-          <label htmlFor="maxPrice">Max price (GBP)</label>
-          <input
-            id="maxPrice"
-            name="maxPrice"
-            type="number"
-            step="0.01"
-            min="0"
-            value={filters.maxPrice}
-            onChange={updateFilter}
-            placeholder="25.00"
-          />
-        </div>
-        <div className="form-row">
-          <label htmlFor="minRating">Min rating</label>
-          <input
-            id="minRating"
-            name="minRating"
-            type="number"
-            step="0.1"
-            min="0"
-            max="5"
-            value={filters.minRating}
-            onChange={updateFilter}
-            placeholder="4.0"
-          />
+        <input
+          id="search"
+          name="search"
+          className="filter-search-input"
+          value={filters.search}
+          onChange={updateFilter}
+          placeholder="Search beans, roasters, origins…"
+        />
+        <div className="filter-chips">
+          <div className="form-row">
+            <label htmlFor="country">Country</label>
+            <select id="country" name="country" value={filters.country} onChange={updateFilter}>
+              <option value="">All</option>
+              {countries.map((country) => (
+                <option key={country} value={country}>{country}</option>
+              ))}
+            </select>
+          </div>
+          <div className="form-row">
+            <label htmlFor="region">Region</label>
+            <select id="region" name="region" value={filters.region} onChange={updateFilter}>
+              <option value="">All</option>
+              {regions.map((region) => (
+                <option key={region} value={region}>{region}</option>
+              ))}
+            </select>
+          </div>
+          <div className="form-row">
+            <label htmlFor="blend">Type</label>
+            <select id="blend" name="blend" value={filters.blend} onChange={updateFilter}>
+              <option value="">All</option>
+              <option value="blend">Blend</option>
+              <option value="single">Single origin</option>
+            </select>
+          </div>
+          <div className="form-row">
+            <label htmlFor="process">Process</label>
+            <select id="process" name="process" value={filters.process} onChange={updateFilter}>
+              <option value="">All</option>
+              {processes.map((process) => (
+                <option key={process} value={process}>{process}</option>
+              ))}
+            </select>
+          </div>
+          <div className="form-row">
+            <label htmlFor="roast">Roast</label>
+            <select id="roast" name="roast" value={filters.roast} onChange={updateFilter}>
+              <option value="">All</option>
+              {roasts.map((roast) => (
+                <option key={roast} value={roast}>{roast}</option>
+              ))}
+            </select>
+          </div>
+          <div className="form-row">
+            <label htmlFor="minPrice">Min £</label>
+            <input
+              id="minPrice"
+              name="minPrice"
+              type="number"
+              step="0.01"
+              min="0"
+              value={filters.minPrice}
+              onChange={updateFilter}
+              placeholder="0.00"
+            />
+          </div>
+          <div className="form-row">
+            <label htmlFor="maxPrice">Max £</label>
+            <input
+              id="maxPrice"
+              name="maxPrice"
+              type="number"
+              step="0.01"
+              min="0"
+              value={filters.maxPrice}
+              onChange={updateFilter}
+              placeholder="25.00"
+            />
+          </div>
+          <div className="form-row">
+            <label htmlFor="minRating">Min ★</label>
+            <input
+              id="minRating"
+              name="minRating"
+              type="number"
+              step="0.1"
+              min="0"
+              max="5"
+              value={filters.minRating}
+              onChange={updateFilter}
+              placeholder="4.0"
+            />
+          </div>
         </div>
       </div>
 
