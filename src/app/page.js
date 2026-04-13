@@ -10,6 +10,16 @@ export default async function Home() {
   const topBeans = await getTopBeansByCity("London", 6);
   return (
     <div className="home">
+      <section className="home-hero">
+        <div className="home-hero-text">
+          <h1>Find &amp; rate exceptional<br />coffee beans</h1>
+          <p>Discover beans from independent roasteries near you, read community ratings, and share your favourites.</p>
+          <div className="cta-row">
+            <a className="button" href="/beans">Browse all beans</a>
+            <a className="button secondary" href="/beans/new">Add a bean</a>
+          </div>
+        </div>
+      </section>
       <BeanFinder />
       <section className="hero-card">
         <div className="split-header">
@@ -54,14 +64,28 @@ export default async function Home() {
           <DailyQuiz isLoggedIn />
         </section>
       ) : null}
-      <section className="hero-card finder-footer">
-        <h2>Already found your beans?</h2>
-        <p className="muted">
-          Browse the community ratings or add a new bean for a roastery.
-        </p>
-        <div className="cta-row">
-          <a className="button" href="/beans">View beans</a>
-          <a className="button secondary" href="/beans/new">Add a bean</a>
+      <section className="games-row">
+        <div className="hero-card game-highlight">
+          <div>
+            <span className="pill">Game</span>
+            <h2>Bean Snake Arcade</h2>
+            <p className="muted">
+              Play the bean-powered version of snake. Collect beans, grow longer,
+              and climb the leaderboard.
+            </p>
+          </div>
+          <a className="button" href="/bean-snake">Play Bean Snake</a>
+        </div>
+        <div className="hero-card game-highlight alt">
+          <div>
+            <span className="pill">Game</span>
+            <h2>Bean Pong</h2>
+            <p className="muted">
+              Rally beans back and forth in our caffeinated twist on pong. Can
+              you beat the CPU?
+            </p>
+          </div>
+          <a className="button" href="/bean-pong">Play Bean Pong</a>
         </div>
       </section>
     </div>

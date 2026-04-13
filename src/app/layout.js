@@ -25,36 +25,52 @@ export default async function RootLayout({ children }) {
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
         <header className="site-header">
           <div className="container header-inner">
-            <div className="brand">
+            <a href="/" className="brand">
               <span className="brand-dot" />
-              <div>
-                <p className="brand-title">Rate My Bean</p>
-                <p className="brand-subtitle">Find great beans near you.</p>
-              </div>
-            </div>
+              <span className="brand-title">Rate My Bean</span>
+            </a>
             <nav className="nav-links">
-              <a href="/">Bean Finder</a>
+              <a href="/">Discover</a>
               <a href="/beans">All Beans</a>
               <a href="/beans/new">Add Bean</a>
+              <a href="/leaderboard">Leaderboard</a>
             </nav>
-            <div className="auth-actions">
-              {process.env.VERCEL_ENV === "preview" ? (
-                <span className="muted">Preview mode</span>
-              ) : session?.user ? (
-                <>
-                  <span className="muted">{session.user.email}</span>
-                  <a href="/api/auth/signout">Sign out</a>
-                </>
-              ) : (
-                <a href="/login">Sign in</a>
-              )}
+            <div className="nav-right">
+              <div className="nav-games">
+                <a href="/bean-snake">Snake</a>
+                <a href="/bean-pong">Pong</a>
+              </div>
+              <div className="auth-actions">
+                {process.env.VERCEL_ENV === "preview" ? (
+                  <span className="muted">Preview mode</span>
+                ) : session?.user ? (
+                  <>
+                    <span className="muted nav-email">{session.user.email}</span>
+                    <a href="/api/auth/signout" className="button small secondary">Sign out</a>
+                  </>
+                ) : (
+                  <a href="/login" className="button small">Sign in</a>
+                )}
+              </div>
             </div>
           </div>
         </header>
         <main className="container page-shell">{children}</main>
         <footer className="site-footer">
-          <div className="container">
-            <p className="muted">Property of D0ND0G</p>
+          <div className="container footer-inner">
+            <a href="/" className="brand">
+              <span className="brand-dot" />
+              <span className="brand-title">Rate My Bean</span>
+            </a>
+            <nav className="footer-nav">
+              <a href="/">Discover</a>
+              <a href="/beans">All Beans</a>
+              <a href="/beans/new">Add Bean</a>
+              <a href="/leaderboard">Leaderboard</a>
+              <a href="/bean-snake">Snake</a>
+              <a href="/bean-pong">Pong</a>
+            </nav>
+            <p className="muted footer-copy">© D0ND0G</p>
           </div>
         </footer>
       </body>
