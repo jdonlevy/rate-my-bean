@@ -370,6 +370,24 @@ const initPromise = (async () => {
     },
     {
       sql: `
+      CREATE TABLE IF NOT EXISTS fsq_roasteries_cache (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        fsq_id TEXT NOT NULL UNIQUE,
+        name TEXT NOT NULL,
+        website TEXT,
+        address TEXT,
+        city TEXT,
+        region TEXT,
+        country TEXT,
+        latitude REAL NOT NULL,
+        longitude REAL NOT NULL,
+        created_at TEXT NOT NULL DEFAULT (datetime('now')),
+        updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+      );
+    `,
+    },
+    {
+      sql: `
       CREATE TABLE IF NOT EXISTS bean_availability (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         bean_id INTEGER NOT NULL,
@@ -403,6 +421,9 @@ const initPromise = (async () => {
     },
     {
       sql: "CREATE INDEX IF NOT EXISTS idx_bean_pong_scores ON bean_pong_scores (score DESC);",
+    },
+    {
+      sql: "CREATE INDEX IF NOT EXISTS idx_fsq_roasteries_location ON fsq_roasteries_cache (latitude, longitude);",
     },
     {
       sql: "CREATE INDEX IF NOT EXISTS idx_availability_bean ON bean_availability (bean_id, roastery_id, seen_date);",
@@ -743,6 +764,50 @@ export async function upsertRoasteries(roasteries) {
   return ids.rows;
 }
 
+export async function upsertFoursquareRoasteries(roasteries) {
+  await ensureInit();
+  if (!roasteries?.length) return [];
+  const batch = roasteries.map((roastery) => ({
+    sql: `
+      INSERT INTO fsq_roasteries_cache (
+        fsq_id,
+        name,
+        website,
+        address,
+        city,
+        region,
+        country,
+        latitude,
+        longitude,
+        updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+      ON CONFLICT(fsq_id)
+      DO UPDATE SET
+        name = excluded.name,
+        website = COALESCE(excluded.website, fsq_roasteries_cache.website),
+        address = COALESCE(excluded.address, fsq_roasteries_cache.address),
+        city = COALESCE(excluded.city, fsq_roasteries_cache.city),
+        region = COALESCE(excluded.region, fsq_roasteries_cache.region),
+        country = COALESCE(excluded.country, fsq_roasteries_cache.country),
+        latitude = excluded.latitude,
+        longitude = excluded.longitude,
+        updated_at = datetime('now')
+    `,
+    args: [
+      roastery.externalId,
+      roastery.name,
+      roastery.website || null,
+      roastery.address || null,
+      roastery.city || null,
+      roastery.region || null,
+      roastery.country || null,
+      roastery.latitude,
+      roastery.longitude,
+    ],
+  }));
+  await db.batch(batch);
+}
+
 export async function createRoastery(data) {
   await ensureInit();
   const externalId = data.externalId || data.external_id;
@@ -798,7 +863,50 @@ export async function createRoastery(data) {
   return result.rows[0] || null;
 }
 
-export async function getRoasteriesByBounds({ south, west, north, east, city, country }) {
+export async function getRoasteriesByBounds({ south, west, north, east, city, country, sources }) {
+  await ensureInit();
+  const conditions = ["latitude BETWEEN ? AND ?", "longitude BETWEEN ? AND ?"];
+  const args = [south, north, west, east];
+  if (city) {
+    const cityValue = `%${city.toLowerCase()}%`;
+    conditions.push(
+      "(LOWER(COALESCE(city, '')) LIKE ? OR LOWER(COALESCE(region, '')) LIKE ?)"
+    );
+    args.push(cityValue, cityValue);
+  }
+  if (country) {
+    conditions.push("LOWER(COALESCE(country, '')) = ?");
+    args.push(country.toLowerCase());
+  }
+  if (Array.isArray(sources) && sources.length) {
+    conditions.push(`source IN (${sources.map(() => "?").join(",")})`);
+    args.push(...sources);
+  } else if (typeof sources === "string") {
+    conditions.push("source = ?");
+    args.push(sources);
+  }
+  const result = await db.execute({
+    sql: `
+      SELECT
+        id,
+        name,
+        website,
+        address,
+        city,
+        region,
+        country,
+        latitude,
+        longitude
+      FROM roasteries
+      WHERE ${conditions.join(" AND ")}
+      ORDER BY name ASC
+    `,
+    args,
+  });
+  return result.rows;
+}
+
+export async function getFoursquareRoasteriesByBounds({ south, west, north, east, city, country }) {
   await ensureInit();
   const conditions = ["latitude BETWEEN ? AND ?", "longitude BETWEEN ? AND ?"];
   const args = [south, north, west, east];
@@ -816,7 +924,7 @@ export async function getRoasteriesByBounds({ south, west, north, east, city, co
   const result = await db.execute({
     sql: `
       SELECT
-        id,
+        fsq_id,
         name,
         website,
         address,
@@ -825,7 +933,7 @@ export async function getRoasteriesByBounds({ south, west, north, east, city, co
         country,
         latitude,
         longitude
-      FROM roasteries
+      FROM fsq_roasteries_cache
       WHERE ${conditions.join(" AND ")}
       ORDER BY name ASC
     `,
@@ -1020,15 +1128,16 @@ export async function upsertUser(data) {
   });
 
   if (existing.rows.length > 0) {
+    const dbId = existing.rows[0].id;
     await db.execute({
       sql: `
         UPDATE users
-        SET name = ?, image = ?
+        SET name = COALESCE(?, name), image = COALESCE(?, image)
         WHERE email = ?
       `,
       args: [data.name || null, data.image || null, email],
     });
-    return;
+    return dbId;
   }
 
   await db.execute({
@@ -1038,6 +1147,7 @@ export async function upsertUser(data) {
     `,
     args: [data.id, email, data.name || null, data.image || null],
   });
+  return data.id;
 }
 
 export async function getStats() {
@@ -1205,9 +1315,10 @@ export async function getBeanometerStats(userId) {
     sql: `
       SELECT ub.user_id,
              ub.beans_count,
-             COALESCE(u.name, u.email, 'Anonymous') AS label
+             COALESCE(u.name, u.email) AS label
       FROM user_beanometer ub
-      LEFT JOIN users u ON u.id = ub.user_id
+      INNER JOIN users u ON u.id = ub.user_id
+      WHERE u.name IS NOT NULL OR u.email IS NOT NULL
       ORDER BY ub.beans_count DESC, label ASC
       LIMIT 10
     `,
