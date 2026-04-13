@@ -47,18 +47,24 @@ if (!isPreview) {
   callbacks: {
     async jwt({ token, user }) {
       if (user?.id) {
-        await upsertUser({
+        // upsertUser returns the canonical DB id (handles the case where a
+        // Google sign-in matches an existing credentials account by email)
+        const dbId = await upsertUser({
           id: user.id,
           email: user.email,
           name: user.name,
           image: user.image,
         });
+        // Store the DB id so the session always uses the same id as the
+        // users table, even if the provider id (token.sub) differs
+        if (dbId) token.dbId = dbId;
       }
       return token;
     },
     async session({ session, token }) {
       if (session?.user) {
-        session.user.id = token.sub;
+        // Prefer the canonical DB id over the provider sub
+        session.user.id = token.dbId || token.sub;
       }
       return session;
     },
