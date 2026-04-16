@@ -1,5 +1,6 @@
 import BeanFinder from "@/components/BeanFinder";
 import DailyQuiz from "@/components/DailyQuiz";
+import NearYouSection from "@/components/NearYouSection";
 import { auth } from "@/auth";
 import { getTopBeansByCity } from "@/lib/db";
 
@@ -20,6 +21,7 @@ export default async function Home() {
           </div>
         </div>
       </section>
+      <NearYouSection />
       <BeanFinder />
       <section className="hero-card">
         <div className="split-header">

@@ -1057,6 +1057,55 @@ export async function getTopBeansByCity(city, limit = 6) {
   return result.rows || [];
 }
 
+export async function getTopBeansByLocation(lat, lng, radiusKm = 10, limit = 6) {
+  await ensureInit();
+  const latDelta = radiusKm / 111;
+  const lngDelta = radiusKm / (111 * Math.cos((lat * Math.PI) / 180));
+  const south = lat - latDelta;
+  const north = lat + latDelta;
+  const west = lng - lngDelta;
+  const east = lng + lngDelta;
+
+  const result = await db.execute({
+    sql: `
+      SELECT
+        b.id,
+        b.name,
+        b.roastery_id,
+        ro.name AS roastery_name,
+        ro.city,
+        ro.latitude,
+        ro.longitude,
+        AVG(r.score) AS avg_score,
+        COUNT(r.id) AS rating_count
+      FROM beans b
+      INNER JOIN roasteries ro ON ro.id = b.roastery_id
+      LEFT JOIN ratings r ON r.bean_id = b.id
+      WHERE ro.latitude BETWEEN ? AND ?
+        AND ro.longitude BETWEEN ? AND ?
+      GROUP BY b.id
+      HAVING COUNT(r.id) > 0
+      ORDER BY AVG(r.score) DESC, COUNT(r.id) DESC
+      LIMIT ?
+    `,
+    args: [south, north, west, east, limit],
+  });
+
+  return (result.rows || []).map((row) => {
+    const dlat = ((row.latitude - lat) * Math.PI) / 180;
+    const dlng = ((row.longitude - lng) * Math.PI) / 180;
+    const a =
+      Math.sin(dlat / 2) ** 2 +
+      Math.cos((lat * Math.PI) / 180) *
+        Math.cos((row.latitude * Math.PI) / 180) *
+        Math.sin(dlng / 2) ** 2;
+    const distance_km =
+      Math.round(6371 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)) * 10) /
+      10;
+    return { ...row, distance_km };
+  });
+}
+
 export async function getBeanImagesById(id) {
   await ensureInit();
   const result = await db.execute({

@@ -1064,6 +1064,24 @@ a {
   margin: 10px 0 6px;
 }
 
+.near-you-prompt,
+.near-you-loading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.near-you-loading {
+  opacity: 0.7;
+}
+
+.distance {
+  font-size: 12px;
+  margin-top: 2px;
+}
+
 .game-highlight {
   display: flex;
   align-items: center;
