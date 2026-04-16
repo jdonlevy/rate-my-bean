@@ -29,7 +29,7 @@ export default function BeanFinder() {
   const [addSuccess, setAddSuccess] = useState("");
   const [mapRef, setMapRef] = useState(null);
   const [hoveredId, setHoveredId] = useState(null);
-  const [status, setStatus] = useState("Zoom in to search London roasteries.");
+  const [status, setStatus] = useState("Zoom in to search for roasteries.");
   const [mapBounds, setMapBounds] = useState(null);
   const [mapZoom, setMapZoom] = useState(null);
   const inFlight = useRef(false);
@@ -92,7 +92,7 @@ export default function BeanFinder() {
   const fetchRoasteries = useCallback(async (bounds, zoomLevel) => {
     if (zoomLevel != null && zoomLevel < 9) {
       setRoasteries([]);
-      setStatus("Zoom in to search London roasteries.");
+      setStatus("Zoom in to search for roasteries.");
       return;
     }
     if (!bounds) return;
@@ -111,7 +111,7 @@ export default function BeanFinder() {
     const east = bounds.getEast();
     try {
       const res = await fetch(
-        `/api/roasteries/search?south=${south}&west=${west}&north=${north}&east=${east}&city=London&country=United%20Kingdom&debug=1`
+        `/api/roasteries/search?south=${south}&west=${west}&north=${north}&east=${east}`
       );
       if (!res.ok) {
         setStatus("Could not load roasteries.");
@@ -121,7 +121,7 @@ export default function BeanFinder() {
       const next = data.roasteries || [];
       setRoasteries(next);
       if (!next.length) {
-        setStatus("No seeded London roasteries found in this area.");
+        setStatus("No roasteries found in this area.");
       }
     } finally {
       lastBoundsKey.current = key;
@@ -135,11 +135,11 @@ export default function BeanFinder() {
     if (inFlight.current) return;
     suppressBoundsUntil.current = Date.now() + 2000;
     setLoading(true);
-    setStatus("Loading London roasteries…");
+    setStatus("Loading roasteries…");
     inFlight.current = true;
     try {
       const res = await fetch(
-        `/api/roasteries/search?lat=${lat}&lon=${lon}&radius=20000&city=London&country=United%20Kingdom&debug=1`
+        `/api/roasteries/search?lat=${lat}&lon=${lon}&radius=20000`
       );
       if (!res.ok) {
         setStatus("Could not load roasteries.");
@@ -149,7 +149,7 @@ export default function BeanFinder() {
       const next = data.roasteries || [];
       setRoasteries(next);
       if (!next.length) {
-        setStatus("No seeded London roasteries found in this area.");
+        setStatus("No roasteries found in this area.");
       }
     } finally {
       setLoading(false);
@@ -281,9 +281,9 @@ export default function BeanFinder() {
     setMapBounds(bounds);
     setMapZoom(zoomLevel ?? null);
     if (zoomLevel != null && zoomLevel < 9) {
-      setStatus("Zoom in to search London roasteries.");
+      setStatus("Zoom in to search for roasteries.");
     } else if (zoomLevel != null) {
-      setStatus("Ready to search London roasteries.");
+      setStatus("Ready to search for roasteries.");
     }
   }, []);
 
