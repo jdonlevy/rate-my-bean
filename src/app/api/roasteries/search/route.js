@@ -1,6 +1,10 @@
 import { getRoasteriesByBounds } from "@/lib/db";
 
-const OVERPASS_URL = "https://overpass-api.de/api/interpreter";
+const OVERPASS_ENDPOINTS = [
+  "https://overpass-api.de/api/interpreter",
+  "https://overpass.kumi.systems/api/interpreter",
+  "https://maps.mail.ru/osm/tools/overpass/api/interpreter",
+];
 
 function parseNumber(value) {
   const num = Number(value);
@@ -19,16 +23,28 @@ function boundsFromRadius(lat, lon, radiusMeters) {
 }
 
 async function queryOverpass({ south, west, north, east }) {
-  const query = `[out:json][timeout:15];(node["craft"="coffee_roaster"](${south},${west},${north},${east});way["craft"="coffee_roaster"](${south},${west},${north},${east}););out center tags;`;
-  const res = await fetch(OVERPASS_URL, {
-    method: "POST",
-    body: `data=${encodeURIComponent(query)}`,
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    signal: AbortSignal.timeout(15000),
-  });
-  if (!res.ok) return [];
-  const data = await res.json();
-  return (data.elements || []).map(osmToRoastery).filter(Boolean);
+  const query = `[out:json][timeout:25];(node["craft"="coffee_roaster"](${south},${west},${north},${east});way["craft"="coffee_roaster"](${south},${west},${north},${east});node["shop"="coffee"](${south},${west},${north},${east});way["shop"="coffee"](${south},${west},${north},${east}););out center tags;`;
+  const body = `data=${encodeURIComponent(query)}`;
+  const headers = { "Content-Type": "application/x-www-form-urlencoded" };
+
+  for (const url of OVERPASS_ENDPOINTS) {
+    try {
+      const res = await fetch(url, {
+        method: "POST",
+        body,
+        headers,
+        signal: AbortSignal.timeout(20000),
+      });
+      if (!res.ok) continue;
+      const text = await res.text();
+      if (text.trim().startsWith("<")) continue; // HTML error response
+      const data = JSON.parse(text);
+      return (data.elements || []).map(osmToRoastery).filter(Boolean);
+    } catch {
+      // try next endpoint
+    }
+  }
+  return [];
 }
 
 function osmToRoastery(el) {
@@ -80,12 +96,10 @@ export async function GET(request) {
   // Clamp to a reasonable search area to avoid huge Overpass queries
   const latSpan = Math.abs(bounds.north - bounds.south);
   const lonSpan = Math.abs(bounds.east - bounds.west);
-  if (lat == null || lon == null) {
-    if (latSpan > 0.35 || lonSpan > 0.5) {
-      const centerLat = (bounds.north + bounds.south) / 2;
-      const centerLon = (bounds.east + bounds.west) / 2;
-      bounds = boundsFromRadius(centerLat, centerLon, Math.min(radius, 8000));
-    }
+  if (latSpan > 0.35 || lonSpan > 0.5) {
+    const centerLat = (bounds.north + bounds.south) / 2;
+    const centerLon = (bounds.east + bounds.west) / 2;
+    bounds = boundsFromRadius(centerLat, centerLon, Math.min(radius, 8000));
   }
 
   // Run OSM and local DB in parallel
