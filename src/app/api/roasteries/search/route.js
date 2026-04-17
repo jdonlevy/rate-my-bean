@@ -1,6 +1,6 @@
-import { getRoasteriesByBounds } from "@/lib/db";
+import { getFoursquareRoasteriesByBounds, getRoasteriesByBounds, upsertFoursquareRoasteries } from "@/lib/db";
 
-const OVERPASS_URL = "https://overpass-api.de/api/interpreter";
+const FSQ_API_KEY = process.env.FOURSQUARE_API_KEY;
 
 function parseNumber(value) {
   const num = Number(value);
@@ -18,39 +18,45 @@ function boundsFromRadius(lat, lon, radiusMeters) {
   };
 }
 
-async function queryOverpass({ south, west, north, east }) {
-  const query = `[out:json][timeout:15];(node["craft"="coffee_roaster"](${south},${west},${north},${east});way["craft"="coffee_roaster"](${south},${west},${north},${east}););out center tags;`;
-  const res = await fetch(OVERPASS_URL, {
-    method: "POST",
-    body: `data=${encodeURIComponent(query)}`,
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    signal: AbortSignal.timeout(15000),
-  });
-  if (!res.ok) return [];
-  const data = await res.json();
-  return (data.elements || []).map(osmToRoastery).filter(Boolean);
+function fsqToRoastery(place) {
+  const loc = place.location || {};
+  const geo = place.geocodes?.main;
+  if (!geo?.latitude || !geo?.longitude) return null;
+  return {
+    id: `fsq-${place.fsq_id}`,
+    externalId: place.fsq_id,
+    name: place.name,
+    website: place.website || null,
+    address: loc.address || null,
+    city: loc.city || null,
+    region: loc.region || null,
+    country: loc.country || null,
+    latitude: geo.latitude,
+    longitude: geo.longitude,
+    source: "fsq",
+  };
 }
 
-function osmToRoastery(el) {
-  const lat = el.type === "node" ? el.lat : el.center?.lat;
-  const lon = el.type === "node" ? el.lon : el.center?.lon;
-  if (!lat || !lon) return null;
-  const tags = el.tags || {};
-  return {
-    id: `osm-${el.type}-${el.id}`,
-    name: tags.name || "Coffee Roastery",
-    website: tags.website || tags.url || null,
-    address:
-      [tags["addr:housenumber"], tags["addr:street"]]
-        .filter(Boolean)
-        .join(" ") || null,
-    city: tags["addr:city"] || tags["addr:town"] || null,
-    region: tags["addr:state"] || tags["addr:county"] || null,
-    country: tags["addr:country"] || null,
-    latitude: lat,
-    longitude: lon,
-    source: "osm",
-  };
+async function queryFoursquare(lat, lon, radiusMeters) {
+  if (!FSQ_API_KEY) return [];
+  const url = new URL("https://api.foursquare.com/v3/places/search");
+  url.searchParams.set("ll", `${lat},${lon}`);
+  url.searchParams.set("radius", Math.min(Math.round(radiusMeters), 50000));
+  url.searchParams.set("query", "coffee roaster");
+  url.searchParams.set("limit", "50");
+  url.searchParams.set("fields", "fsq_id,name,location,geocodes,website");
+
+  try {
+    const res = await fetch(url, {
+      headers: { Authorization: FSQ_API_KEY, Accept: "application/json" },
+      signal: AbortSignal.timeout(10000),
+    });
+    if (!res.ok) return [];
+    const data = await res.json();
+    return (data.results || []).map(fsqToRoastery).filter(Boolean);
+  } catch {
+    return [];
+  }
 }
 
 export async function GET(request) {
@@ -63,50 +69,55 @@ export async function GET(request) {
   const lon = parseNumber(searchParams.get("lon"));
   let radius = parseNumber(searchParams.get("radius")) || 10000;
 
-  let bounds = { south, west, north, east };
+  let bounds;
+  let centerLat;
+  let centerLon;
 
   if (lat != null && lon != null) {
+    centerLat = lat;
+    centerLon = lon;
     bounds = boundsFromRadius(lat, lon, radius);
-  }
-
-  if (
-    [bounds.south, bounds.west, bounds.north, bounds.east].some(
-      (v) => v == null
-    )
-  ) {
+  } else if ([south, west, north, east].every((v) => v != null)) {
+    bounds = { south, west, north, east };
+    centerLat = (south + north) / 2;
+    centerLon = (west + east) / 2;
+    // Derive a radius from the bounds for the FSQ call
+    radius = Math.min(
+      Math.abs(north - south) * 111000,
+      Math.abs(east - west) * 111000
+    ) / 2;
+  } else {
     return Response.json({ error: "Missing bounds" }, { status: 400 });
   }
 
-  // Clamp to a reasonable search area to avoid huge Overpass queries
-  const latSpan = Math.abs(bounds.north - bounds.south);
-  const lonSpan = Math.abs(bounds.east - bounds.west);
-  if (lat == null || lon == null) {
-    if (latSpan > 0.35 || lonSpan > 0.5) {
-      const centerLat = (bounds.north + bounds.south) / 2;
-      const centerLon = (bounds.east + bounds.west) / 2;
-      bounds = boundsFromRadius(centerLat, centerLon, Math.min(radius, 8000));
+  // Run local DB and FSQ cache lookup in parallel
+  const [localRoasteries, cachedFsq] = await Promise.all([
+    getRoasteriesByBounds(bounds),
+    getFoursquareRoasteriesByBounds(bounds),
+  ]);
+
+  // If FSQ cache is empty for this area, call the live API and cache the results
+  let fsqRoasteries = cachedFsq;
+  if (!cachedFsq.length && centerLat != null && centerLon != null) {
+    const fresh = await queryFoursquare(centerLat, centerLon, radius);
+    if (fresh.length) {
+      await upsertFoursquareRoasteries(fresh).catch(() => {});
+      fsqRoasteries = fresh;
     }
   }
 
-  // Run OSM and local DB in parallel
-  const [osmRoasteries, localRoasteries] = await Promise.all([
-    queryOverpass(bounds).catch(() => []),
-    getRoasteriesByBounds(bounds),
-  ]);
-
-  // Merge: deduplicate OSM results that are within ~100m of a local entry
-  const localCoords = new Set(
+  // Deduplicate FSQ results against local DB entries by coordinate (~100m)
+  const localCoordSet = new Set(
     localRoasteries.map(
       (r) => `${Number(r.latitude).toFixed(3)},${Number(r.longitude).toFixed(3)}`
     )
   );
-  const uniqueOsm = osmRoasteries.filter((r) => {
+  const uniqueFsq = fsqRoasteries.filter((r) => {
     const key = `${Number(r.latitude).toFixed(3)},${Number(r.longitude).toFixed(3)}`;
-    return !localCoords.has(key);
+    return !localCoordSet.has(key);
   });
 
   return Response.json({
-    roasteries: [...localRoasteries, ...uniqueOsm],
-    source: "osm",
+    roasteries: [...localRoasteries, ...uniqueFsq],
   });
 }

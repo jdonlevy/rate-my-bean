@@ -139,7 +139,7 @@ export default function BeanFinder() {
     inFlight.current = true;
     try {
       const res = await fetch(
-        `/api/roasteries/search?lat=${lat}&lon=${lon}&radius=20000`
+        `/api/roasteries/search?lat=${lat}&lon=${lon}&radius=10000`
       );
       if (!res.ok) {
         setStatus("Could not load roasteries.");
