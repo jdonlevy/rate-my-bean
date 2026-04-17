@@ -1,4 +1,4 @@
-import { getFoursquareRoasteriesByBounds, getRoasteriesByBounds, upsertFoursquareRoasteries } from "@/lib/db";
+import { getRoasteriesByBounds, upsertRoasteries } from "@/lib/db";
 
 const FSQ_API_KEY = process.env.FOURSQUARE_API_KEY;
 
@@ -23,8 +23,6 @@ function fsqToRoastery(place) {
   const geo = place.geocodes?.main;
   if (!geo?.latitude || !geo?.longitude) return null;
   return {
-    id: `fsq-${place.fsq_id}`,
-    externalId: place.fsq_id,
     name: place.name,
     website: place.website || null,
     address: loc.address || null,
@@ -34,6 +32,7 @@ function fsqToRoastery(place) {
     latitude: geo.latitude,
     longitude: geo.longitude,
     source: "fsq",
+    externalId: place.fsq_id,
   };
 }
 
@@ -81,7 +80,6 @@ export async function GET(request) {
     bounds = { south, west, north, east };
     centerLat = (south + north) / 2;
     centerLon = (west + east) / 2;
-    // Derive a radius from the bounds for the FSQ call
     radius = Math.min(
       Math.abs(north - south) * 111000,
       Math.abs(east - west) * 111000
@@ -90,34 +88,18 @@ export async function GET(request) {
     return Response.json({ error: "Missing bounds" }, { status: 400 });
   }
 
-  // Run local DB and FSQ cache lookup in parallel
-  const [localRoasteries, cachedFsq] = await Promise.all([
-    getRoasteriesByBounds(bounds),
-    getFoursquareRoasteriesByBounds(bounds),
-  ]);
+  // Check what's already in the DB for this area
+  const existing = await getRoasteriesByBounds(bounds);
+  const hasFsq = existing.some((r) => r.source === "fsq");
 
-  // If FSQ cache is empty for this area, call the live API and cache the results
-  let fsqRoasteries = cachedFsq;
-  if (!cachedFsq.length && centerLat != null && centerLon != null) {
+  // If no FSQ results cached yet, fetch from Foursquare and store
+  if (!hasFsq && centerLat != null && centerLon != null) {
     const fresh = await queryFoursquare(centerLat, centerLon, radius);
     if (fresh.length) {
-      await upsertFoursquareRoasteries(fresh).catch(() => {});
-      fsqRoasteries = fresh;
+      await upsertRoasteries(fresh).catch(() => {});
+      return Response.json({ roasteries: [...existing, ...fresh] });
     }
   }
 
-  // Deduplicate FSQ results against local DB entries by coordinate (~100m)
-  const localCoordSet = new Set(
-    localRoasteries.map(
-      (r) => `${Number(r.latitude).toFixed(3)},${Number(r.longitude).toFixed(3)}`
-    )
-  );
-  const uniqueFsq = fsqRoasteries.filter((r) => {
-    const key = `${Number(r.latitude).toFixed(3)},${Number(r.longitude).toFixed(3)}`;
-    return !localCoordSet.has(key);
-  });
-
-  return Response.json({
-    roasteries: [...localRoasteries, ...uniqueFsq],
-  });
+  return Response.json({ roasteries: existing });
 }
