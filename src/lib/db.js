@@ -865,7 +865,7 @@ export async function createRoastery(data) {
 
 export async function getRoasteriesByBounds({ south, west, north, east, city, country, sources }) {
   await ensureInit();
-  const conditions = ["latitude BETWEEN ? AND ?", "longitude BETWEEN ? AND ?"];
+  const conditions = ["latitude BETWEEN ? AND ?", "longitude BETWEEN ? AND ?", "source NOT LIKE 'seed%'"];
   const args = [south, north, west, east];
   if (city) {
     const cityValue = `%${city.toLowerCase()}%`;
