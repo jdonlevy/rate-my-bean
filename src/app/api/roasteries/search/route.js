@@ -1,6 +1,10 @@
 import { getRoasteriesByBounds, upsertRoasteries } from "@/lib/db";
 
-const FSQ_API_KEY = process.env.FOURSQUARE_API_KEY;
+const OVERPASS_ENDPOINTS = [
+  "https://overpass-api.de/api/interpreter",
+  "https://overpass.kumi.systems/api/interpreter",
+  "https://overpass.osm.ch/api/interpreter",
+];
 
 function parseNumber(value) {
   const num = Number(value);
@@ -18,44 +22,62 @@ function boundsFromRadius(lat, lon, radiusMeters) {
   };
 }
 
-function fsqToRoastery(place) {
-  const loc = place.location || {};
-  const geo = place.geocodes?.main;
-  if (!geo?.latitude || !geo?.longitude) return null;
+function osmToRoastery(el) {
+  const lat = el.type === "node" ? el.lat : el.center?.lat;
+  const lon = el.type === "node" ? el.lon : el.center?.lon;
+  if (!lat || !lon) return null;
+  const tags = el.tags || {};
   return {
-    name: place.name,
-    website: place.website || null,
-    address: loc.address || null,
-    city: loc.city || null,
-    region: loc.region || null,
-    country: loc.country || null,
-    latitude: geo.latitude,
-    longitude: geo.longitude,
-    source: "fsq",
-    externalId: place.fsq_id,
+    name: tags.name || "Coffee Roastery",
+    website: tags.website || tags.url || null,
+    address: [tags["addr:housenumber"], tags["addr:street"]].filter(Boolean).join(" ") || null,
+    city: tags["addr:city"] || tags["addr:town"] || null,
+    region: tags["addr:state"] || tags["addr:county"] || null,
+    country: tags["addr:country"] || null,
+    latitude: lat,
+    longitude: lon,
+    source: "osm",
+    externalId: `${el.type}-${el.id}`,
   };
 }
 
-async function queryFoursquare(lat, lon, radiusMeters) {
-  if (!FSQ_API_KEY) return [];
-  const url = new URL("https://api.foursquare.com/v3/places/search");
-  url.searchParams.set("ll", `${lat},${lon}`);
-  url.searchParams.set("radius", Math.min(Math.round(radiusMeters), 50000));
-  url.searchParams.set("query", "coffee roaster");
-  url.searchParams.set("limit", "50");
-  url.searchParams.set("fields", "fsq_id,name,location,geocodes,website");
+async function queryOverpass({ south, west, north, east }) {
+  const query = [
+    `[out:json][timeout:25];`,
+    `(`,
+    `  node["craft"="coffee_roaster"](${south},${west},${north},${east});`,
+    `  way["craft"="coffee_roaster"](${south},${west},${north},${east});`,
+    `  node["shop"="coffee"](${south},${west},${north},${east});`,
+    `  way["shop"="coffee"](${south},${west},${north},${east});`,
+    `);`,
+    `out center tags;`,
+  ].join("");
 
-  try {
-    const res = await fetch(url, {
-      headers: { Authorization: FSQ_API_KEY, Accept: "application/json" },
-      signal: AbortSignal.timeout(10000),
-    });
-    if (!res.ok) return [];
-    const data = await res.json();
-    return (data.results || []).map(fsqToRoastery).filter(Boolean);
-  } catch {
-    return [];
+  const body = `data=${encodeURIComponent(query)}`;
+  const headers = {
+    "Content-Type": "application/x-www-form-urlencoded",
+    "Accept": "*/*",
+    "User-Agent": "RateMyBean/1.0 (https://rate-my-bean.vercel.app)",
+  };
+
+  for (const url of OVERPASS_ENDPOINTS) {
+    try {
+      const res = await fetch(url, {
+        method: "POST",
+        body,
+        headers,
+        signal: AbortSignal.timeout(20000),
+      });
+      if (!res.ok) continue;
+      const text = await res.text();
+      if (text.trim().startsWith("<")) continue;
+      const data = JSON.parse(text);
+      return (data.elements || []).map(osmToRoastery).filter(Boolean);
+    } catch {
+      // try next endpoint
+    }
   }
+  return null; // all endpoints failed
 }
 
 export async function GET(request) {
@@ -69,37 +91,43 @@ export async function GET(request) {
   let radius = parseNumber(searchParams.get("radius")) || 10000;
 
   let bounds;
-  let centerLat;
-  let centerLon;
 
   if (lat != null && lon != null) {
-    centerLat = lat;
-    centerLon = lon;
     bounds = boundsFromRadius(lat, lon, radius);
   } else if ([south, west, north, east].every((v) => v != null)) {
     bounds = { south, west, north, east };
-    centerLat = (south + north) / 2;
-    centerLon = (west + east) / 2;
-    radius = Math.min(
-      Math.abs(north - south) * 111000,
-      Math.abs(east - west) * 111000
-    ) / 2;
   } else {
     return Response.json({ error: "Missing bounds" }, { status: 400 });
   }
 
-  // Check what's already in the DB for this area
-  const existing = await getRoasteriesByBounds(bounds);
-  const hasFsq = existing.some((r) => r.source === "fsq");
-
-  // If no FSQ results cached yet, fetch from Foursquare and store
-  if (!hasFsq && centerLat != null && centerLon != null) {
-    const fresh = await queryFoursquare(centerLat, centerLon, radius);
-    if (fresh.length) {
-      await upsertRoasteries(fresh).catch(() => {});
-      return Response.json({ roasteries: [...existing, ...fresh] });
-    }
+  // Clamp bounds to avoid huge Overpass queries
+  const latSpan = Math.abs(bounds.north - bounds.south);
+  const lonSpan = Math.abs(bounds.east - bounds.west);
+  if (latSpan > 0.35 || lonSpan > 0.5) {
+    const centerLat = (bounds.north + bounds.south) / 2;
+    const centerLon = (bounds.east + bounds.west) / 2;
+    bounds = boundsFromRadius(centerLat, centerLon, Math.min(radius, 8000));
   }
 
-  return Response.json({ roasteries: existing });
+  // Check DB cache first
+  const existing = await getRoasteriesByBounds(bounds);
+  const hasCached = existing.some((r) => r.source === "osm");
+
+  if (hasCached) {
+    return Response.json({ roasteries: existing });
+  }
+
+  // Nothing cached — hit Overpass and store results
+  const fresh = await queryOverpass(bounds);
+  if (fresh === null) {
+    // All endpoints failed — return whatever we have in the DB
+    return Response.json({ roasteries: existing });
+  }
+
+  if (fresh.length) {
+    await upsertRoasteries(fresh).catch(() => {});
+  }
+
+  const userEntries = existing.filter((r) => r.source !== "osm");
+  return Response.json({ roasteries: [...userEntries, ...fresh] });
 }
